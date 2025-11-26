@@ -1,7 +1,11 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import CarForm from "@/components/CarForm";
 
 interface Car {
-  id: number;
+  id: string;
   name: string;
   nameKh: string;
   brand: string;
@@ -19,114 +23,31 @@ interface Car {
 }
 
 // Replace with your actual Telegram username or bot
-const TELEGRAM_USERNAME = "yourusername"; // Change this to your Telegram username
-
-const cars: Car[] = [
-  {
-    id: 1,
-    name: "Toyota Camry",
-    nameKh: "តូយ៉ូតា ខេមរី",
-    brand: "Toyota",
-    price: "៣២,០០០",
-    priceUSD: 32000,
-    year: 2022,
-    mileage: "២៥,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Gasoline",
-    fuelTypeKh: "សាំង",
-    image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  },
-  {
-    id: 2,
-    name: "Honda CR-V",
-    nameKh: "ហុនដា ស៊ីអាវ",
-    brand: "Honda",
-    price: "៣៨,៥០០",
-    priceUSD: 38500,
-    year: 2023,
-    mileage: "១២,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Gasoline",
-    fuelTypeKh: "សាំង",
-    image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  },
-  {
-    id: 3,
-    name: "Toyota Fortuner",
-    nameKh: "តូយ៉ូតា ហ្វតទូណា",
-    brand: "Toyota",
-    price: "៤៥,០០០",
-    priceUSD: 45000,
-    year: 2023,
-    mileage: "១៨,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Diesel",
-    fuelTypeKh: "ម៉ាស៊ូត",
-    image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  },
-  {
-    id: 4,
-    name: "Mercedes-Benz C-Class",
-    nameKh: "ម៉ឺស៊េដេស បែន ស៊ី-ក្លាស",
-    brand: "Mercedes-Benz",
-    price: "៥៥,០០០",
-    priceUSD: 55000,
-    year: 2021,
-    mileage: "៣៥,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Gasoline",
-    fuelTypeKh: "សាំង",
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  },
-  {
-    id: 5,
-    name: "Lexus RX 350",
-    nameKh: "ឡិចសាស់ អាឆ៊ី ៣៥០",
-    brand: "Lexus",
-    price: "៦២,០០០",
-    priceUSD: 62000,
-    year: 2022,
-    mileage: "២០,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Hybrid",
-    fuelTypeKh: "ហ៊ីប្រីត",
-    image: "https://images.unsplash.com/photo-1617654112368-307921291f42?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  },
-  {
-    id: 6,
-    name: "BMW X5",
-    nameKh: "ប៊ី អឹម ដាប់ល្យូ អ៊ិច៥",
-    brand: "BMW",
-    price: "៧០,០០០",
-    priceUSD: 70000,
-    year: 2023,
-    mileage: "៨,០០០ គម",
-    transmission: "Automatic",
-    transmissionKh: "ស្វ័យប្រវត្តិ",
-    fuelType: "Gasoline",
-    fuelTypeKh: "សាំង",
-    image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=80",
-    condition: "Used",
-    conditionKh: "បានប្រើប្រាស់"
-  }
-];
+const TELEGRAM_USERNAME = "NasFong"; // Change this to your Telegram username
 
 export default function Home() {
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingCarId, setEditingCarId] = useState<string | undefined>();
+
+  // Fetch cars from API
+  const fetchCars = async () => {
+    try {
+      const response = await fetch("/api/cars");
+      const data = await response.json();
+      setCars(data);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
   // Function to generate Telegram link with car details
   const handleContactClick = (car: Car) => {
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:\n\n🚗 ${car.nameKh} (${car.name})\n💰 តម្លៃ: $${car.priceUSD.toLocaleString()}\n📅 ឆ្នាំ: ${car.year}\n⚙️ ${car.transmissionKh}\n⛽ ${car.fuelTypeKh}\n📏 ${car.mileage}\n\nសូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
@@ -137,8 +58,59 @@ export default function Home() {
     window.open(telegramUrl, '_blank');
   };
 
+  const handleAddCar = () => {
+    setEditingCarId(undefined);
+    setShowForm(true);
+  };
+
+  const handleEditCar = (carId: string) => {
+    setEditingCarId(carId);
+    setShowForm(true);
+  };
+
+  const handleDeleteCar = async (carId: string, carName: string) => {
+    if (!confirm(`តើអ្នកពិតជាចង់លុបរថយន្ត ${carName} មែនទេ?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/cars/${carId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        fetchCars();
+      } else {
+        alert("Failed to delete car");
+      }
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      alert("Failed to delete car");
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingCarId(undefined);
+    fetchCars();
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingCarId(undefined);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      {/* Car Form Modal */}
+      {showForm && (
+        <CarForm
+          carId={editingCarId}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
@@ -147,10 +119,13 @@ export default function Home() {
               <h1 className="text-3xl font-bold">🚗 ហាងលក់រថយន្ត</h1>
               <p className="text-blue-100 mt-1">Car Showroom Cambodia</p>
             </div>
-            <div className="hidden md:flex gap-6">
-              <a href="#" className="hover:text-blue-200 transition-colors">ទំព័រដើម</a>
-              <a href="#" className="hover:text-blue-200 transition-colors">រថយន្ត</a>
-              <a href="#" className="hover:text-blue-200 transition-colors">ទំនាក់ទំនង</a>
+            <div className="flex gap-4 items-center">
+              <button
+                onClick={handleAddCar}
+                className="bg-white text-blue-700 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+              >
+                + បន្ថែមរថយន្ត
+              </button>
             </div>
           </div>
         </div>
@@ -178,9 +153,24 @@ export default function Home() {
           <p className="text-gray-600">Available Vehicles</p>
         </div>
 
-        {/* Car Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {cars.map((car) => (
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">កំពុងផ្ទុក...</p>
+          </div>
+        ) : cars.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-600 text-xl">មិនមានរថយន្តនៅឡើយទេ</p>
+            <button
+              onClick={handleAddCar}
+              className="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              បន្ថែមរថយន្តដំបូង
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {cars.map((car) => (
             <div
               key={car.id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
@@ -231,16 +221,34 @@ export default function Home() {
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => handleContactClick(car)}
-                  className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  ចាប់អារម្មណ៍ / Contact Us
-                </button>
+                <div className="space-y-3 mt-4">
+                  <button 
+                    onClick={() => handleContactClick(car)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    ចាប់អារម្មណ៍ / Contact Us
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditCar(car.id)}
+                      className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                    >
+                      កែប្រែ
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCar(car.id, car.nameKh)}
+                      className="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition-colors"
+                    >
+                      លុប
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Footer */}
