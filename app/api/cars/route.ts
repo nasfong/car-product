@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadImage } from '@/lib/minio';
+import { saveImage } from '@/lib/storage';
 
 // GET /api/cars - List all cars
 export async function GET() {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (imageFile) {
       const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      imageUrl = await uploadImage(buffer, imageFile.name, imageFile.type);
+      imageUrl = await saveImage(buffer, imageFile.name);
     } else {
       return NextResponse.json(
         { error: 'Image is required' },

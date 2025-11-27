@@ -3,6 +3,24 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
+// Static options for select fields
+const TRANSMISSION_OPTIONS = [
+  { value: "Automatic", label: "ស្វ័យប្រវត្តិ" },
+  { value: "Manual", label: "ដោយដៃ" },
+];
+
+const FUEL_TYPE_OPTIONS = [
+  { value: "Petrol", label: "សាំង" },
+  { value: "Diesel", label: "ម៉ាស៊ូត" },
+  { value: "Electric", label: "អគ្គិសនី" },
+  { value: "Hybrid", label: "កូនកាត់" },
+];
+
+const CONDITION_OPTIONS = [
+  { value: "New", label: "ថ្មី" },
+  { value: "Used", label: "បានប្រើប្រាស់" },
+];
+
 interface CarFormData {
   name: string;
   nameKh: string;
@@ -37,12 +55,12 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     priceUSD: "",
     year: "",
     mileage: "",
-    transmission: "",
-    transmissionKh: "",
-    fuelType: "",
-    fuelTypeKh: "",
-    condition: "",
-    conditionKh: "",
+    transmission: "Automatic",
+    transmissionKh: "Automatic",
+    fuelType: "Hybrid",
+    fuelTypeKh: "Hybrid",
+    condition: "Used",
+    conditionKh: "Used",
   });
 
   useEffect(() => {
@@ -51,7 +69,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       fetch(`/api/cars/${carId}`)
         .then((res) => res.json())
         .then((data) => {
-          setFormData(data);
+          setFormData({
+            ...data,
+            priceUSD: data.priceUSD.toString(),
+            year: data.year.toString(),
+          });
           setImagePreview(data.image);
         })
         .catch((error) => console.error("Error fetching car:", error));
@@ -61,6 +83,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('New image selected:', file.name, file.size, 'bytes');
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -89,22 +112,38 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         conditionKh: formData.conditionKh || formData.condition,
       };
       
-      // Append all form fields
+      // Append all form fields EXCEPT image (we'll handle image separately)
       Object.entries(submissionData).forEach(([key, value]) => {
-        data.append(key, value.toString());
+        if (key !== 'image') {
+          data.append(key, value.toString());
+        }
       });
 
       // Append image if selected
       if (imageFile) {
+        console.log('Appending NEW image file to FormData:', imageFile.name);
         data.append("image", imageFile);
       } else if (!carId) {
         alert("Please select an image");
         setLoading(false);
         return;
+      } else {
+        console.log('No new image selected, API will keep existing image');
       }
 
       const url = carId ? `/api/cars/${carId}` : "/api/cars";
       const method = carId ? "PUT" : "POST";
+      console.log('Submitting to:', url, 'with method:', method);
+      
+      // Log all FormData entries for debugging
+      console.log('FormData contents:');
+      for (const [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      }
 
       const response = await fetch(url, {
         method,
@@ -170,10 +209,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                   <svg className="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                   </svg>
-                  <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                  <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                  <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">ចុចដើម្បីបញ្ចូលរូបភាព</span></p>
+                  <p className="text-xs text-gray-500">PNG, JPG, WEBP (អតិបរមា 5MB)</p>
                 </div>
                 <input
+                  key={carId || 'new'}
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
@@ -195,7 +235,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           {/* Name Field */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ឈ្មោះរថយន្ត / Car Name *
+              ឈ្មោះរថយន្ត *
             </label>
             <input
               type="text"
@@ -204,7 +244,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Toyota Camry / តូយ៉ូតា ខេមរី"
+              placeholder="តូយ៉ូតា ខេមរី"
             />
           </div>
 
@@ -212,7 +252,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ម៉ាក / Brand *
+                ម៉ាក *
               </label>
               <input
                 type="text"
@@ -226,7 +266,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ឆ្នាំ / Year *
+                ឆ្នាំ *
               </label>
               <input
                 type="text"
@@ -243,7 +283,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           {/* Price Field */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              តម្លៃ USD / Price USD *
+              តម្លៃ USD *
             </label>
             <input
               type="text"
@@ -259,7 +299,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           {/* Mileage */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ចម្ងាយបើកបរ / Mileage *
+              គីឡូម៉ែត្រ *
             </label>
             <input
               type="text"
@@ -268,88 +308,99 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="២៥,០០០ គម"
+              placeholder="២៥,០០០"
             />
           </div>
 
-          {/* Transmission */}
+          {/* Transmission Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ប្រអប់លេខ / Transmission *
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ប្រអប់លេខ *
             </label>
-            <input
-              type="text"
+            <select
               name="transmission"
               value={formData.transmission}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Automatic / ស្វ័យប្រវត្តិ"
-            />
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {TRANSMISSION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Fuel Type */}
+          {/* Fuel Type Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ប្រភេទប្រេង / Fuel Type *
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ប្រភេទប្រេង *
             </label>
-            <input
-              type="text"
+            <select
               name="fuelType"
               value={formData.fuelType}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Gasoline / សាំង"
-            />
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {FUEL_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Condition */}
+          {/* Condition Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ស្ថានភាព / Condition *
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ស្ថានភាព *
             </label>
-            <input
-              type="text"
+            <select
               name="condition"
               value={formData.condition}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Used / បានប្រើប្រាស់"
-            />
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {CONDITION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
+          </div>
+
+          {/* Footer with Action Buttons - Inside Form */}
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              បោះបង់
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  កំពុងរក្សាទុក...
+                </span>
+              ) : carId ? "រក្សាទុក" : "បន្ថែម"}
+            </button>
           </div>
         </form>
-
-        {/* Footer with Action Buttons */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            បោះបង់
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                កំពុងរក្សាទុក...
-              </span>
-            ) : carId ? "រក្សាទុក" : "បន្ថែម"}
-          </button>
-        </div>
       </div>
     </div>
   );

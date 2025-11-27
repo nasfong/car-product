@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadImage, deleteImage } from '@/lib/minio';
+import { saveImage, deleteImage } from '@/lib/storage';
 
 // GET /api/cars/[id] - Get a single car
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const car = await prisma.car.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!car) {
@@ -32,14 +33,15 @@ export async function GET(
 // PUT /api/cars/[id] - Update a car
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const formData = await request.formData();
     
     // Check if car exists
     const existingCar = await prisma.car.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingCar) {
@@ -53,21 +55,28 @@ export async function PUT(
     let imageUrl = existingCar.image;
     const imageFile = formData.get('image') as File | null;
 
-    if (imageFile && imageFile.size > 0) {
+    console.log('Image file received:', imageFile ? `Yes (${imageFile.name}, ${imageFile.size} bytes)` : 'No');
+
+    if (imageFile && imageFile.size > 0 && imageFile.name) {
+      console.log('Processing new image upload...');
       // Delete old image
-      if (existingCar.image) {
+      if (existingCar.image && existingCar.image.startsWith('/uploads/')) {
+        console.log('Deleting old image:', existingCar.image);
         await deleteImage(existingCar.image);
       }
       
       // Upload new image
       const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      imageUrl = await uploadImage(buffer, imageFile.name, imageFile.type);
+      imageUrl = await saveImage(buffer, imageFile.name);
+      console.log('New image saved:', imageUrl);
+    } else {
+      console.log('No new image, keeping existing:', imageUrl);
     }
 
     // Update car in database
     const updatedCar = await prisma.car.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: formData.get('name') as string,
         nameKh: formData.get('nameKh') as string,
@@ -99,11 +108,12 @@ export async function PUT(
 // DELETE /api/cars/[id] - Delete a car
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const car = await prisma.car.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!car) {
@@ -120,7 +130,7 @@ export async function DELETE(
 
     // Delete car from database
     await prisma.car.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Car deleted successfully' });
