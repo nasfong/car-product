@@ -169,80 +169,81 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
             {cars.map((car) => (
             <div
               key={car.id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
             >
               {/* Car Image */}
-              <div className="relative h-64 bg-gray-200">
+              <div className="relative aspect-[4/3] bg-gray-200">
                 <Image
                   src={car.image}
                   alt={car.name}
                   fill
                   className="object-cover"
                 />
-                <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  {car.year}
+                {/* Photo count badge - top right */}
+                <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                  8
                 </div>
               </div>
 
               {/* Car Details */}
-              <div className="p-6">
-                <h4 className="text-2xl font-bold text-gray-800 mb-1">{car.nameKh}</h4>
-                <p className="text-gray-600 mb-4">{car.name}</p>
+              <div className="p-4">
+                {/* Title */}
+                <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2">
+                  {car.nameKh}
+                </h3>
+                
+                {/* Time and Location */}
+                <div className="text-xs text-gray-500 mb-2">
+                  <span>13h • Russei Kaev, Phnom Penh</span>
+                </div>
+                
+                {/* Category */}
+                <div className="text-xs text-gray-600 mb-4">
+                  {car.conditionKh}
+                </div>
 
-                <div className="mb-4">
-                  <div className="text-3xl font-bold text-blue-700 mb-1">
+                {/* Bottom section with price and heart */}
+                <div className="flex items-center justify-between">
+                  {/* Price */}
+                  <div className="text-xl font-bold text-orange-500">
                     ${car.priceUSD.toLocaleString()}
                   </div>
-                  <div className="text-lg text-gray-600">
-                    {car.price} ដុល្លារ
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">ចម្ងាយបើកបរ:</span>
-                    <span className="font-semibold text-gray-800">{car.mileage}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">ប្រអប់លេខ:</span>
-                    <span className="font-semibold text-gray-800">{car.transmissionKh}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">ប្រភេទប្រេង:</span>
-                    <span className="font-semibold text-gray-800">{car.fuelTypeKh}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600">ស្ថានភាព:</span>
-                    <span className="font-semibold text-gray-800">{car.conditionKh}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mt-4">
-                  <button 
-                    onClick={() => handleContactClick(car)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    ចាប់អារម្មណ៍ / Contact Us
-                  </button>
                   
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditCar(car.id)}
-                      className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-                    >
-                      កែប្រែ
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCar(car.id, car.nameKh)}
-                      className="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition-colors"
-                    >
-                      លុប
-                    </button>
-                  </div>
+                  {/* Heart icon */}
+                  <button className="text-gray-300 hover:text-red-500 transition-colors">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 000-6.364 4.5 4.5 0 00-6.364 0L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Admin buttons - below price section */}
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => handleContactClick(car)}
+                    className="flex-1 text-xs bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Contact
+                  </button>
+                  <button
+                    onClick={() => handleEditCar(car.id)}
+                    className="flex-1 text-xs bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCar(car.id, car.nameKh)}
+                    className="flex-1 text-xs bg-gray-200 text-red-600 py-2 rounded hover:bg-red-50 transition-colors"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
