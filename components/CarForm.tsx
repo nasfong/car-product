@@ -77,10 +77,19 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       fetch(`/api/cars/${carId}`)
         .then((res) => res.json())
         .then((data) => {
+          console.log('Fetched car data for editing:', data);
           setFormData({
-            ...data,
-            price: data.price.toString(),
-            year: data.year.toString(),
+            name: data.name || "",
+            brand: data.brand || "",
+            price: data.price?.toString() || "",
+            year: data.year?.toString() || "",
+            mileage: data.mileage || "",
+            transmission: data.transmission || "ស្វ័យប្រវត្តិ",
+            fuelType: data.fuelType || "សាំង",
+            condition: data.condition || "បានប្រើប្រាស់",
+            location: data.location || "Phnom Penh",
+            description: data.description || "",
+            vehicleType: data.vehicleType || "ស៊េដាន",
           });
           setExistingImages(data.images || []);
         })
@@ -128,15 +137,13 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     try {
       const data = new FormData();
       
-      const submissionData = {
-        ...formData,
-        price: Number(formData.price) || 0,
-        year: Number(formData.year) || new Date().getFullYear(),
-      };
+      console.log('Form data before submission:', formData);
       
-      // Append all form fields
-      Object.entries(submissionData).forEach(([key, value]) => {
-        data.append(key, value.toString());
+      // Append all form fields directly
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          data.append(key, value.toString());
+        }
       });
 
       // Append existing images (for updates)
@@ -175,13 +182,16 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save car");
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(`Failed to save car: ${errorData.details || errorData.error || response.statusText}`);
       }
 
       onSuccess();
     } catch (error) {
       console.error("Error saving car:", error);
-      alert("Failed to save car");
+      const errorMessage = error instanceof Error ? error.message : "Failed to save car";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

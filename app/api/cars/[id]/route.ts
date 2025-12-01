@@ -39,6 +39,16 @@ export async function PUT(
     const { id } = await params;
     const formData = await request.formData();
     
+    // Debug: Log all form data
+    console.log('PUT /api/cars/[id] - Received form data:');
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+    
     // Check if car exists
     const existingCar = await prisma.car.findUnique({
       where: { id },
@@ -86,30 +96,64 @@ export async function PUT(
       }
     }
 
+    // Parse and validate form data
+    const name = formData.get('name') as string;
+    const brand = formData.get('brand') as string;
+    const priceStr = formData.get('price') as string;
+    const yearStr = formData.get('year') as string;
+    const mileage = formData.get('mileage') as string;
+    const transmission = formData.get('transmission') as string;
+    const fuelType = formData.get('fuelType') as string;
+    const condition = formData.get('condition') as string;
+    const location = formData.get('location') as string;
+    const description = formData.get('description') as string;
+    const vehicleType = formData.get('vehicleType') as string;
+
+    // Convert and validate numeric fields
+    const price = parseFloat(priceStr);
+    const year = parseInt(yearStr);
+
+    if (isNaN(price) || price <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid price value' },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(year) || year < 1900 || year > new Date().getFullYear() + 1) {
+      return NextResponse.json(
+        { error: 'Invalid year value' },
+        { status: 400 }
+      );
+    }
+
     // Update car in database
     const updatedCar = await prisma.car.update({
       where: { id },
       data: {
-        name: formData.get('name') as string,
-        brand: formData.get('brand') as string,
-        price: parseFloat(formData.get('price') as string),
-        year: parseInt(formData.get('year') as string),
-        mileage: formData.get('mileage') as string,
-        transmission: formData.get('transmission') as string,
-        fuelType: formData.get('fuelType') as string,
+        name,
+        brand,
+        price,
+        year,
+        mileage,
+        transmission,
+        fuelType,
         images: finalImages,
-        condition: formData.get('condition') as string,
-        location: formData.get('location') as string || existingCar.location,
-        description: formData.get('description') as string || null,
-        vehicleType: formData.get('vehicleType') as string || existingCar.vehicleType,
+        condition,
+        location: location || existingCar.location,
+        description: description || null,
+        vehicleType: vehicleType || existingCar.vehicleType,
       },
     });
 
     return NextResponse.json(updatedCar);
   } catch (error) {
     console.error('Error updating car:', error);
+    
+    // Return more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update car' },
+      { error: 'Failed to update car', details: errorMessage },
       { status: 500 }
     );
   }
