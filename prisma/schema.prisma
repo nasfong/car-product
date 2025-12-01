@@ -10,19 +10,18 @@ datasource db {
 model Car {
   id              String   @id @default(cuid())
   name            String
-  nameKh          String
   brand           String
-  price           String
-  priceUSD        Float
+  price           Float
   year            Int
   mileage         String
   transmission    String
-  transmissionKh  String
   fuelType        String
-  fuelTypeKh      String
-  image           String
+  images          String[] // Array of image URLs
   condition       String
-  conditionKh     String
+  location        String   @default("Phnom Penh")
+  description     String?
+  vehicleType     String?  // SUV, Sedan, Hatchback, etc.
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

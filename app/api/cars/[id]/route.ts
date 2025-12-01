@@ -51,27 +51,39 @@ export async function PUT(
       );
     }
 
-    // Handle image update
-    let imageUrl = existingCar.image;
-    const imageFile = formData.get('image') as File | null;
-
-    console.log('Image file received:', imageFile ? `Yes (${imageFile.name}, ${imageFile.size} bytes)` : 'No');
-
-    if (imageFile && imageFile.size > 0 && imageFile.name) {
-      console.log('Processing new image upload...');
-      // Delete old image
-      if (existingCar.image && existingCar.image.startsWith('/uploads/')) {
-        console.log('Deleting old image:', existingCar.image);
-        await deleteImage(existingCar.image);
+    // Handle image updates
+    let finalImages: string[] = [];
+    
+    // Get existing images from form data
+    const existingImagesStr = formData.get('existingImages') as string;
+    if (existingImagesStr) {
+      try {
+        const existingImages = JSON.parse(existingImagesStr) as string[];
+        finalImages = [...existingImages];
+      } catch (e) {
+        console.error('Error parsing existing images:', e);
       }
-      
-      // Upload new image
-      const bytes = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      imageUrl = await saveImage(buffer, imageFile.name);
-      console.log('New image saved:', imageUrl);
-    } else {
-      console.log('No new image, keeping existing:', imageUrl);
+    }
+
+    // Handle new image uploads
+    const newImageFiles = formData.getAll('images') as File[];
+    if (newImageFiles.length > 0) {
+      for (const file of newImageFiles) {
+        if (file.size > 0 && file.name) {
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const imageUrl = await saveImage(buffer, file.name);
+          finalImages.push(imageUrl);
+        }
+      }
+    }
+
+    // Delete removed images (compare with existing car images)
+    const removedImages = (existingCar.images || []).filter(img => !finalImages.includes(img));
+    for (const removedImg of removedImages) {
+      if (removedImg.startsWith('/uploads/')) {
+        await deleteImage(removedImg);
+      }
     }
 
     // Update car in database
@@ -79,19 +91,17 @@ export async function PUT(
       where: { id },
       data: {
         name: formData.get('name') as string,
-        nameKh: formData.get('nameKh') as string,
         brand: formData.get('brand') as string,
-        price: formData.get('price') as string,
-        priceUSD: parseFloat(formData.get('priceUSD') as string),
+        price: parseFloat(formData.get('price') as string),
         year: parseInt(formData.get('year') as string),
         mileage: formData.get('mileage') as string,
         transmission: formData.get('transmission') as string,
-        transmissionKh: formData.get('transmissionKh') as string,
         fuelType: formData.get('fuelType') as string,
-        fuelTypeKh: formData.get('fuelTypeKh') as string,
-        image: imageUrl,
+        images: finalImages,
         condition: formData.get('condition') as string,
-        conditionKh: formData.get('conditionKh') as string,
+        location: formData.get('location') as string || existingCar.location,
+        description: formData.get('description') as string || null,
+        vehicleType: formData.get('vehicleType') as string || existingCar.vehicleType,
       },
     });
 
@@ -123,9 +133,13 @@ export async function DELETE(
       );
     }
 
-    // Delete image from MinIO
-    if (car.image) {
-      await deleteImage(car.image);
+    // Delete all images from local storage
+    if (car.images && car.images.length > 0) {
+      for (const image of car.images) {
+        if (image.startsWith('/uploads/')) {
+          await deleteImage(image);
+        }
+      }
     }
 
     // Delete car from database

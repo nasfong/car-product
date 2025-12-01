@@ -7,19 +7,18 @@ import CarForm from "@/components/CarForm";
 interface Car {
   id: string;
   name: string;
-  nameKh: string;
   brand: string;
-  price: string;
-  priceUSD: number;
+  price: number;
   year: number;
   mileage: string;
   transmission: string;
-  transmissionKh: string;
   fuelType: string;
-  fuelTypeKh: string;
-  image: string;
+  images: string[];
   condition: string;
-  conditionKh: string;
+  location: string;
+  description?: string;
+  vehicleType?: string;
+  createdAt: string;
 }
 
 // Replace with your actual Telegram username or bot
@@ -50,7 +49,7 @@ export default function Home() {
 
   // Function to generate Telegram link with car details
   const handleContactClick = (car: Car) => {
-    const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:\n\n🚗 ${car.nameKh} (${car.name})\n💰 តម្លៃ: $${car.priceUSD.toLocaleString()}\n📅 ឆ្នាំ: ${car.year}\n⚙️ ${car.transmissionKh}\n⛽ ${car.fuelTypeKh}\n📏 ${car.mileage}\n\nសូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
+    const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:\n\n🚗 ${car.name}\n💰 តម្លៃ: $${car.price.toLocaleString()}\n📅 ឆ្នាំ: ${car.year}\n⚙️ ${car.transmission}\n⛽ ${car.fuelType}\n📏 ${car.mileage}\n\nសូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
     
     const encodedMessage = encodeURIComponent(message);
     const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`;
@@ -114,9 +113,9 @@ export default function Home() {
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold">🚗 ហាងលក់រថយន្ត</h1>
+              <h1 className="text-xl font-bold">🚗 ហាងលក់រថយន្ត</h1>
               <p className="text-blue-100 mt-1">Car Showroom Cambodia</p>
             </div>
             <div className="flex gap-4 items-center">
@@ -131,20 +130,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            ស្វាគមន៍មកកាន់ហាងរថយន្តរបស់យើង
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            រថយន្តគុណភាពខ្ពស់ តម្លៃសមរម្យ សេវាកម្មល្អបំផុត
-          </p>
-          <p className="text-lg text-blue-200">
-            Welcome to Our Premium Car Showroom
-          </p>
-        </div>
-      </section>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
@@ -169,81 +154,66 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {cars.map((car) => (
             <div
               key={car.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
+              className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors"
             >
-              {/* Car Image */}
-              <div className="relative aspect-[4/3] bg-gray-200">
-                <Image
-                  src={car.image}
-                  alt={car.name}
-                  fill
-                  className="object-cover"
-                />
-                {/* Photo count badge - top right */}
-                <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                  8
-                </div>
-              </div>
-
-              {/* Car Details */}
-              <div className="p-4">
-                {/* Title */}
-                <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2">
-                  {car.nameKh}
-                </h3>
-                
-                {/* Time and Location */}
-                <div className="text-xs text-gray-500 mb-2">
-                  <span>13h • Russei Kaev, Phnom Penh</span>
-                </div>
-                
-                {/* Category */}
-                <div className="text-xs text-gray-600 mb-4">
-                  {car.conditionKh}
+              <div className="flex gap-4">
+                {/* Car Image Thumbnail */}
+                <div className="relative w-28 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                  <Image
+                    src={car.images[0] || '/placeholder-car.jpg'}
+                    alt={car.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
 
-                {/* Bottom section with price and heart */}
-                <div className="flex items-center justify-between">
-                  {/* Price */}
-                  <div className="text-xl font-bold text-orange-500">
-                    ${car.priceUSD.toLocaleString()}
+                {/* Car Details */}
+                <div className="flex-grow">
+                  {/* Title - exactly like Khmer24 */}
+                  <h4 className="text-blue-600 hover:text-blue-800 font-normal mb-1 cursor-pointer text-sm">
+                    {car.name}
+                  </h4>
+                  
+                  {/* Location and Date - Khmer24 format */}
+                  <div className="text-xs text-gray-600 mb-1">
+                    {car.location} {new Date(car.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </div>
                   
-                  {/* Heart icon */}
-                  <button className="text-gray-300 hover:text-red-500 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 000-6.364 4.5 4.5 0 00-6.364 0L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
-                </div>
+                  {/* Condition/Category */}
+                  <div className="text-xs text-gray-600 mb-2">
+                    {car.condition}
+                  </div>
+                  
+                  {/* Price - Khmer24 style */}
+                  <div className="text-base font-bold text-gray-900">
+                    ${car.price.toLocaleString()}
+                  </div>
 
-                {/* Admin buttons - below price section */}
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() => handleContactClick(car)}
-                    className="flex-1 text-xs bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Contact
-                  </button>
-                  <button
-                    onClick={() => handleEditCar(car.id)}
-                    className="flex-1 text-xs bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCar(car.id, car.nameKh)}
-                    className="flex-1 text-xs bg-gray-200 text-red-600 py-2 rounded hover:bg-red-50 transition-colors"
-                  >
-                    Delete
-                  </button>
+                  {/* Admin buttons - compact and subtle */}
+                  <div className="flex gap-2 mt-2">
+                    <button 
+                      onClick={() => handleContactClick(car)}
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Contact
+                    </button>
+                    <button
+                      onClick={() => handleEditCar(car.id)}
+                      className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCar(car.id, car.name)}
+                      className="text-xs bg-gray-200 text-red-600 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

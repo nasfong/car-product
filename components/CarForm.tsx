@@ -5,36 +5,45 @@ import { X } from "lucide-react";
 
 // Static options for select fields
 const TRANSMISSION_OPTIONS = [
-  { value: "Automatic", label: "ស្វ័យប្រវត្តិ" },
-  { value: "Manual", label: "ដោយដៃ" },
+  "ស្វ័យប្រវត្តិ",
+  "ដោយដៃ",
 ];
 
 const FUEL_TYPE_OPTIONS = [
-  { value: "Petrol", label: "សាំង" },
-  { value: "Diesel", label: "ម៉ាស៊ូត" },
-  { value: "Electric", label: "អគ្គិសនី" },
-  { value: "Hybrid", label: "កូនកាត់" },
+  "សាំង",
+  "ម៉ាស៊ូត",
+  "អគ្គិសនី",
+  "កូនកាត់",
 ];
 
 const CONDITION_OPTIONS = [
-  { value: "New", label: "ថ្មី" },
-  { value: "Used", label: "បានប្រើប្រាស់" },
+  "ថ្មី",
+  "បានប្រើប្រាស់",
+];
+
+const VEHICLE_TYPE_OPTIONS = [
+  "ស៊េដាន",
+  "SUV",
+  "ហាចបាក់",
+  "មីនីប៊ុស",
+  "ភីកអាប់",
+  "ក្រុសអូវ័រ",
+  "វ៉ាន់",
+  "ត្រាក់",
 ];
 
 interface CarFormData {
   name: string;
-  nameKh: string;
   brand: string;
   price: string;
-  priceUSD: string;
   year: string;
   mileage: string;
   transmission: string;
-  transmissionKh: string;
   fuelType: string;
-  fuelTypeKh: string;
   condition: string;
-  conditionKh: string;
+  location: string;
+  description: string;
+  vehicleType: string;
 }
 
 interface CarFormProps {
@@ -45,22 +54,21 @@ interface CarFormProps {
 
 export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<CarFormData>({
     name: "",
-    nameKh: "",
     brand: "",
     price: "",
-    priceUSD: "",
     year: "",
     mileage: "",
-    transmission: "Automatic",
-    transmissionKh: "Automatic",
-    fuelType: "Hybrid",
-    fuelTypeKh: "Hybrid",
-    condition: "Used",
-    conditionKh: "Used",
+    transmission: "ស្វ័យប្រវត្តិ",
+    fuelType: "សាំង",
+    condition: "បានប្រើប្រាស់",
+    location: "Phnom Penh",
+    description: "",
+    vehicleType: "ស៊េដាន",
   });
 
   useEffect(() => {
@@ -71,25 +79,45 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         .then((data) => {
           setFormData({
             ...data,
-            priceUSD: data.priceUSD.toString(),
+            price: data.price.toString(),
             year: data.year.toString(),
           });
-          setImagePreview(data.image);
+          setExistingImages(data.images || []);
         })
         .catch((error) => console.error("Error fetching car:", error));
     }
   }, [carId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log('New image selected:', file.name, file.size, 'bytes');
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      console.log('New images selected:', files.map(f => f.name));
+      setImageFiles(files);
+      
+      // Create previews for new images
+      const previews: string[] = [];
+      let loadedCount = 0;
+      
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews[index] = reader.result as string;
+          loadedCount++;
+          if (loadedCount === files.length) {
+            setImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setImageFiles(prev => prev.filter((_, i) => i !== index));
+      setImagePreviews(prev => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -100,35 +128,31 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     try {
       const data = new FormData();
       
-      // Auto-populate Khmer fields with same value if not provided
       const submissionData = {
         ...formData,
-        nameKh: formData.nameKh || formData.name,
-        price: formData.price || formData.priceUSD,
-        priceUSD: Number(formData.priceUSD) || 0,
+        price: Number(formData.price) || 0,
         year: Number(formData.year) || new Date().getFullYear(),
-        transmissionKh: formData.transmissionKh || formData.transmission,
-        fuelTypeKh: formData.fuelTypeKh || formData.fuelType,
-        conditionKh: formData.conditionKh || formData.condition,
       };
       
-      // Append all form fields EXCEPT image (we'll handle image separately)
+      // Append all form fields
       Object.entries(submissionData).forEach(([key, value]) => {
-        if (key !== 'image') {
-          data.append(key, value.toString());
-        }
+        data.append(key, value.toString());
       });
 
-      // Append image if selected
-      if (imageFile) {
-        console.log('Appending NEW image file to FormData:', imageFile.name);
-        data.append("image", imageFile);
-      } else if (!carId) {
-        alert("Please select an image");
+      // Append existing images (for updates)
+      if (existingImages.length > 0) {
+        data.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      // Append new image files
+      if (imageFiles.length > 0) {
+        imageFiles.forEach((file, index) => {
+          data.append(`images`, file);
+        });
+      } else if (!carId && existingImages.length === 0) {
+        alert("Please select at least one image");
         setLoading(false);
         return;
-      } else {
-        console.log('No new image selected, API will keep existing image');
       }
 
       const url = carId ? `/api/cars/${carId}` : "/api/cars";
@@ -164,7 +188,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -199,9 +223,9 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
           <div className="p-6 space-y-6">
           {/* Image Upload */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label className="text-sm font-medium text-gray-900">
-              រូបភាព / Image <span className="text-red-500">*</span>
+              រូបភាព / Images <span className="text-red-500">*</span>
             </label>
             <div className="mt-2">
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -209,25 +233,67 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                   <svg className="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                   </svg>
-                  <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">ចុចដើម្បីបញ្ចូលរូបភាព</span></p>
+                  <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">ចុចដើម្បីបញ្ចូលរូបភាព (អាចជ្រើសបានច្រើន)</span></p>
                   <p className="text-xs text-gray-500">PNG, JPG, WEBP (អតិបរមា 5MB)</p>
                 </div>
                 <input
                   key={carId || 'new'}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="hidden"
                 />
               </label>
             </div>
-            {imagePreview && (
-              <div className="mt-4 relative h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
+            
+            {/* Display existing images */}
+            {existingImages.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">រូបភាពដែលមានស្រាប់:</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {existingImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Existing ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index, true)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Display new image previews */}
+            {imagePreviews.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">រូបភាពថ្មី:</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index, false)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -287,8 +353,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             </label>
             <input
               type="text"
-              name="priceUSD"
-              value={formData.priceUSD}
+              name="price"
+              value={formData.price}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -325,8 +391,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               {TRANSMISSION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>
@@ -345,8 +411,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               {FUEL_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>
@@ -365,11 +431,63 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               {CONDITION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Vehicle Type Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ប្រភេទរថយន្ត
+            </label>
+            <select
+              name="vehicleType"
+              value={formData.vehicleType}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {VEHICLE_TYPE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Location Field */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              ទីតាំង *
+            </label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Phnom Penh"
+            />
+          </div>
+
+
+
+          {/* Description Field */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              ការពិពណ៌នា
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
+            />
           </div>
 
           </div>
