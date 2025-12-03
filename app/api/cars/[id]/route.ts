@@ -101,13 +101,13 @@ export async function PUT(
     const brand = formData.get('brand') as string;
     const priceStr = formData.get('price') as string;
     const yearStr = formData.get('year') as string;
-    const mileage = formData.get('mileage') as string;
     const transmission = formData.get('transmission') as string;
     const fuelType = formData.get('fuelType') as string;
     const condition = formData.get('condition') as string;
     const location = formData.get('location') as string;
     const description = formData.get('description') as string;
     const vehicleType = formData.get('vehicleType') as string;
+    const sold = formData.get('sold') === 'true';
 
     // Convert and validate numeric fields
     const price = parseFloat(priceStr);
@@ -135,7 +135,6 @@ export async function PUT(
         brand,
         price,
         year,
-        mileage,
         transmission,
         fuelType,
         images: finalImages,
@@ -143,6 +142,7 @@ export async function PUT(
         location: location || existingCar.location,
         description: description || null,
         vehicleType: vehicleType || existingCar.vehicleType,
+        sold: sold,
       },
     });
 

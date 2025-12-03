@@ -13,7 +13,6 @@ model Car {
   brand           String
   price           Float
   year            Int
-  mileage         String
   transmission    String
   fuelType        String
   images          String[] // Array of image URLs
@@ -21,6 +20,7 @@ model Car {
   location        String   @default("Phnom Penh")
   description     String?
   vehicleType     String?  // SUV, Sedan, Hatchback, etc.
+  sold            Boolean  @default(false)
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

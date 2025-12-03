@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
         brand: formData.get('brand') as string,
         price: parseFloat(formData.get('price') as string),
         year: parseInt(formData.get('year') as string),
-        mileage: formData.get('mileage') as string,
         transmission: formData.get('transmission') as string,
         fuelType: formData.get('fuelType') as string,
         images: imageUrls,
@@ -57,6 +56,7 @@ export async function POST(request: NextRequest) {
         location: formData.get('location') as string || 'Phnom Penh',
         description: formData.get('description') as string || null,
         vehicleType: formData.get('vehicleType') as string || null,
+        sold: formData.get('sold') === 'true',
       },
     });
 

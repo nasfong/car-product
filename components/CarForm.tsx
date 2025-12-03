@@ -13,7 +13,7 @@ const FUEL_TYPE_OPTIONS = [
   "សាំង",
   "ម៉ាស៊ូត",
   "អគ្គិសនី",
-  "កូនកាត់",
+  "សាំង/អគ្គិសនី (Hybrid)",
 ];
 
 const CONDITION_OPTIONS = [
@@ -22,14 +22,16 @@ const CONDITION_OPTIONS = [
 ];
 
 const VEHICLE_TYPE_OPTIONS = [
-  "ស៊េដាន",
-  "SUV",
-  "ហាចបាក់",
-  "មីនីប៊ុស",
-  "ភីកអាប់",
-  "ក្រុសអូវ័រ",
-  "វ៉ាន់",
-  "ត្រាក់",
+  "Sedan",
+  "SUV", 
+  "Hatchback",
+  "Pickup",
+  "Van",
+  "Crossover",
+  "Coupe",
+  "Convertible",
+  "Wagon",
+  "Minivan",
 ];
 
 interface CarFormData {
@@ -37,13 +39,13 @@ interface CarFormData {
   brand: string;
   price: string;
   year: string;
-  mileage: string;
   transmission: string;
   fuelType: string;
   condition: string;
   location: string;
   description: string;
   vehicleType: string;
+  sold: boolean;
 }
 
 interface CarFormProps {
@@ -62,13 +64,13 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     brand: "",
     price: "",
     year: "",
-    mileage: "",
     transmission: "ស្វ័យប្រវត្តិ",
-    fuelType: "សាំង",
+    fuelType: "សាំង/អគ្គិសនី (Hybrid)",
     condition: "បានប្រើប្រាស់",
     location: "Phnom Penh",
     description: "",
-    vehicleType: "ស៊េដាន",
+    vehicleType: "Sedan",
+    sold: false,
   });
 
   useEffect(() => {
@@ -83,13 +85,13 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             brand: data.brand || "",
             price: data.price?.toString() || "",
             year: data.year?.toString() || "",
-            mileage: data.mileage || "",
             transmission: data.transmission || "ស្វ័យប្រវត្តិ",
             fuelType: data.fuelType || "សាំង",
-            condition: data.condition || "បានប្រើប្រាស់",
+            condition: data.condition || "Used",
             location: data.location || "Phnom Penh",
             description: data.description || "",
-            vehicleType: data.vehicleType || "ស៊េដាន",
+            vehicleType: data.vehicleType || "Sedan",
+            sold: data.sold || false,
           });
           setExistingImages(data.images || []);
         })
@@ -176,12 +178,19 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         }
       }
 
+      const token = localStorage.getItem('admin-token');
       const response = await fetch(url, {
         method,
         body: data,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please login as admin');
+        }
         const errorData = await response.json();
         console.error("Server error:", errorData);
         throw new Error(`Failed to save car: ${errorData.details || errorData.error || response.statusText}`);
@@ -208,43 +217,43 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-[100vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
               {carId ? "កែប្រែរថយន្ត" : "បន្ថែមរថយន្ត"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
               {carId ? "Edit Car Details" : "Add New Car to Inventory"}
             </p>
           </div>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg p-2 hover:bg-gray-100 transition-colors"
+            className="rounded-lg p-3 sm:p-2 hover:bg-gray-100 transition-colors touch-manipulation"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-6 w-6 sm:h-5 sm:w-5 text-gray-500" />
           </button>
         </div>
 
         {/* Form Content */}
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Image Upload */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-900">
+            <label className="block text-base sm:text-sm font-medium text-gray-900">
               រូបភាព / Images <span className="text-red-500">*</span>
             </label>
             <div className="mt-2">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+              <label className="flex flex-col items-center justify-center w-full h-40 sm:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors touch-manipulation">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg className="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                  <svg className="w-10 h-10 sm:w-8 sm:h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                   </svg>
-                  <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">ចុចដើម្បីបញ្ចូលរូបភាព (អាចជ្រើសបានច្រើន)</span></p>
-                  <p className="text-xs text-gray-500">PNG, JPG, WEBP (អតិបរមា 5MB)</p>
+                  <p className="mb-1 text-sm sm:text-sm text-gray-500 text-center px-2"><span className="font-semibold">ចុចដើម្បីបញ្ចូលរូបភាព</span></p>
+                  <p className="text-xs text-gray-500 text-center px-2">PNG, JPG, WEBP (អតិបរមា 5MB)</p>
                 </div>
                 <input
                   key={carId || 'new'}
@@ -261,18 +270,18 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             {existingImages.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">រូបភាពដែលមានស្រាប់:</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {existingImages.map((image, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={image}
                         alt={`Existing ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border"
+                        className="w-full h-24 sm:h-24 object-cover rounded-lg border"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index, true)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center text-sm sm:text-xs hover:bg-red-600 touch-manipulation"
                       >
                         ×
                       </button>
@@ -286,18 +295,18 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             {imagePreviews.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">រូបភាពថ្មី:</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border"
+                        className="w-full h-24 sm:h-24 object-cover rounded-lg border"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index, false)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center text-sm sm:text-xs hover:bg-red-600 touch-manipulation"
                       >
                         ×
                       </button>
@@ -310,8 +319,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Name Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ឈ្មោះរថយន្ត *
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              ឈ្មោះរថយន្ត <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -319,86 +328,72 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="តូយ៉ូតា ខេមរី"
             />
           </div>
 
-          {/* Brand and Year */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ម៉ាក *
-              </label>
-              <input
-                type="text"
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Toyota"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ឆ្នាំ *
-              </label>
-              <input
-                type="text"
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="2024"
-              />
-            </div>
+          {/* Brand Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              ម៉ាក <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="brand"
+              value={formData.brand}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Toyota"
+            />
+          </div>
+
+          {/* Year Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              ឆ្នាំ <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="year"
+              value={formData.year}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="2024"
+              inputMode="numeric"
+            />
           </div>
 
           {/* Price Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              តម្លៃ USD *
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              តម្លៃ USD <span className="text-red-500">*</span>
             </label>
             <input
-              type="text"
+              type="number"
               name="price"
               value={formData.price}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="32000"
-            />
-          </div>
-
-          {/* Mileage */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              គីឡូម៉ែត្រ *
-            </label>
-            <input
-              type="text"
-              name="mileage"
-              value={formData.mileage}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="២៥,០០០"
+              inputMode="numeric"
             />
           </div>
 
           {/* Transmission Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ប្រអប់លេខ *
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              ប្រអប់លេខ <span className="text-red-500">*</span>
             </label>
             <select
               name="transmission"
               value={formData.transmission}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
             >
               {TRANSMISSION_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -410,15 +405,15 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Fuel Type Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ប្រភេទប្រេង *
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              ប្រភេតប្រេង <span className="text-red-500">*</span>
             </label>
             <select
               name="fuelType"
               value={formData.fuelType}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
             >
               {FUEL_TYPE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -430,15 +425,15 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Condition Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ស្ថានភាព *
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              ស្ថានភាព <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
               value={formData.condition}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
             >
               {CONDITION_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -450,14 +445,14 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Vehicle Type Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
               ប្រភេទរថយន្ត
             </label>
             <select
               name="vehicleType"
               value={formData.vehicleType}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
             >
               {VEHICLE_TYPE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -469,8 +464,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Location Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              ទីតាំង *
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              ទីតាំង <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -478,7 +473,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               value={formData.location}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Phnom Penh"
             />
           </div>
@@ -487,7 +482,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
           {/* Description Field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
               ការពិពណ៌នា
             </label>
             <textarea
@@ -495,27 +490,58 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation resize-none"
               placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
             />
+          </div>
+
+          {/* Sold Status Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-3">
+              ស្ថានភាពលក់
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+                <input
+                  type="radio"
+                  name="sold"
+                  value="false"
+                  checked={!formData.sold}
+                  onChange={() => setFormData(prev => ({ ...prev, sold: false }))}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-base sm:text-sm text-gray-700">អាចលក់បាន (Available)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+                <input
+                  type="radio"
+                  name="sold"
+                  value="true"
+                  checked={formData.sold}
+                  onChange={() => setFormData(prev => ({ ...prev, sold: true }))}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-base sm:text-sm text-gray-700">លក់រួចហើយ (Sold)</span>
+              </label>
+            </div>
           </div>
 
           </div>
 
           {/* Footer with Action Buttons - Inside Form */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
             >
               បោះបង់
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
