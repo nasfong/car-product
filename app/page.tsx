@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import CarForm from "@/components/CarForm";
 import LoginModal from "@/components/LoginModal";
+import { CONTACT } from "@/lib/constants";
 
 interface Car {
   id: string;
@@ -21,9 +22,6 @@ interface Car {
   sold: boolean;
   createdAt: string;
 }
-
-// Replace with your actual Telegram username or bot
-const TELEGRAM_USERNAME = "NasFong"; // Change this to your Telegram username
 
 export default function Home() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -57,8 +55,7 @@ export default function Home() {
   const handleContactClick = (car: Car) => {
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:\n\n🚗 ${car.name}\n💰 តម្លៃ: $${car.price.toLocaleString()}\n📅 ឆ្នាំ: ${car.year}\n⚙️ ${car.transmission}\n⛽ ${car.fuelType}\n\nសូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
 
-    const encodedMessage = encodeURIComponent(message);
-    const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`;
+    const telegramUrl = CONTACT.telegram.url(message);
 
     window.open(telegramUrl, '_blank');
   };
@@ -259,14 +256,14 @@ export default function Home() {
                 {/* Sold Badge - Top Right Corner */}
                 {car.sold && (
                   <div className="absolute top-2 right-[-20] z-10">
-                    <div className="bg-red-500 text-white text-xs px-8 py-1 font-medium transform rotate-[30deg] shadow-lg">
+                    <div className="bg-red-500 text-white text-xs px-8 py-1 font-medium transform rotate-30 shadow-lg">
                       លក់រួចហើយ
                     </div>
                   </div>
                 )}
                 
                 {/* Car Image */}
-                <div className="relative aspect-[4/3] bg-gray-200">
+                <div className="relative aspect-4/3 bg-gray-200">
                   <Image
                     src={car.images[0] || '/placeholder-car.jpg'}
                     alt={car.name}

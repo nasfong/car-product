@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:test": "node scripts/test-db-connection.js"
   },
   "dependencies": {
     "lucide-react": "^0.555.0",

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Phone, MessageCircle, MapPin, Calendar, Gauge, Fuel, Settings, Car, FileText } from "lucide-react";
+import { CONTACT } from "@/lib/constants";
 
 interface Car {
   id: string;
@@ -21,9 +22,6 @@ interface Car {
   sold: boolean;
   createdAt: string;
 }
-
-// Replace with your actual Telegram username
-const TELEGRAM_USERNAME = "NasFong";
 
 export default function CarDetailPage() {
   const params = useParams();
@@ -71,8 +69,7 @@ export default function CarDetailPage() {
 
 សូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
     
-    const encodedMessage = encodeURIComponent(message);
-    const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`;
+    const telegramUrl = CONTACT.telegram.url(message);
     
     window.open(telegramUrl, '_blank');
   };
