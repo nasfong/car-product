@@ -25,6 +25,16 @@ services:
       - "traefik.http.routers.minio-api.tls.certresolver=myresolver"
       - "traefik.http.routers.minio-api.service=minio-api-service"
       - "traefik.http.services.minio-api-service.loadbalancer.server.port=9000"
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2"          # <--- UPDATED to 2 CPUs
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+  
     networks:
       proxy:
         aliases:

@@ -9,10 +9,13 @@ export interface Car {
   transmission: string;
   fuelType: string;
   images: string[];
+  videos: string[];
   condition: string;
   location: string;
   description?: string;
   vehicleType?: string;
+  color?: string;
+  papers?: string;
   sold: boolean;
   createdAt: string;
 }

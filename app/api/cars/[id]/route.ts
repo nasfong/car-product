@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { saveImage, deleteImage } from '@/lib/storage';
+import { saveImage, deleteImage, saveVideo, deleteVideo } from '@/lib/storage';
+
+// Configure route for large file uploads
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout
 
 // GET /api/cars/[id] - Get a single car
 export async function GET(
@@ -20,6 +24,10 @@ export async function GET(
       );
     }
 
+    // Debug log to check videos
+    console.log(`Car ${id} - Videos count:`, car.videos?.length || 0);
+    console.log(`Car ${id} - Videos:`, car.videos);
+
     return NextResponse.json(car);
   } catch (error) {
     console.error('Error fetching car:', error);
@@ -37,7 +45,29 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const formData = await request.formData();
+    
+    // Parse form data with error handling for large uploads
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (error: any) {
+      console.error('FormData parsing error:', error.message);
+      // Only catch specific size-related errors
+      if (error.message?.includes('Request body exceeded') || 
+          error.message?.includes('body size limit') ||
+          error.message?.includes('Max body size')) {
+        return NextResponse.json(
+          { error: 'Upload too large. Please reduce file sizes. Maximum total size is 80MB.' },
+          { status: 413 }
+        );
+      }
+      // Re-throw other errors to see what's actually happening
+      console.error('Unexpected FormData error:', error);
+      return NextResponse.json(
+        { error: `Failed to parse form data: ${error.message}` },
+        { status: 400 }
+      );
+    }
     
     // Debug: Log all form data
     console.log('PUT /api/cars/[id] - Received form data:');
@@ -75,6 +105,8 @@ export async function PUT(
       }
     }
 
+
+
     // Handle new image uploads
     const newImageFiles = formData.getAll('images') as File[];
     if (newImageFiles.length > 0) {
@@ -91,8 +123,55 @@ export async function PUT(
     // Delete removed images (compare with existing car images)
     const removedImages = (existingCar.images || []).filter(img => !finalImages.includes(img));
     for (const removedImg of removedImages) {
-      if (removedImg.startsWith('/uploads/')) {
+      try {
         await deleteImage(removedImg);
+        console.log('Deleted removed image from storage:', removedImg);
+      } catch (error) {
+        console.warn('Failed to delete image:', removedImg, error);
+      }
+    }
+
+    // Handle video updates
+    let finalVideos: string[] = [];
+    
+    // Get existing videos from form data
+    const existingVideosStr = formData.get('existingVideos') as string;
+    if (existingVideosStr) {
+      try {
+        const existingVideos = JSON.parse(existingVideosStr) as string[];
+        finalVideos = [...existingVideos];
+      } catch (e) {
+        console.error('Error parsing existing videos:', e);
+      }
+    }
+
+    // Handle new video uploads
+    const newVideoFiles = formData.getAll('videos') as File[];
+    if (newVideoFiles.length > 0) {
+      for (const file of newVideoFiles) {
+        if (file.size > 0 && file.name) {
+          if (file.size > 50 * 1024 * 1024) { // 50MB limit
+            return NextResponse.json(
+              { error: `Video file ${file.name} is too large. Maximum size is 50MB.` },
+              { status: 400 }
+            );
+          }
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const videoUrl = await saveVideo(buffer, file.name);
+          finalVideos.push(videoUrl);
+        }
+      }
+    }
+
+    // Delete removed videos (compare with existing car videos)
+    const removedVideos = (existingCar.videos || []).filter(vid => !finalVideos.includes(vid));
+    for (const removedVid of removedVideos) {
+      try {
+        await deleteVideo(removedVid);
+        console.log('Deleted removed video from storage:', removedVid);
+      } catch (error) {
+        console.warn('Failed to delete video:', removedVid, error);
       }
     }
 
@@ -107,6 +186,9 @@ export async function PUT(
     const location = formData.get('location') as string;
     const description = formData.get('description') as string;
     const vehicleType = formData.get('vehicleType') as string;
+    const color = formData.get('color') as string;
+    const papers = formData.get('papers') as string;
+    const tiktokUrl = formData.get('tiktokUrl') as string;
     const sold = formData.get('sold') === 'true';
 
     // Convert and validate numeric fields
@@ -138,10 +220,14 @@ export async function PUT(
         transmission,
         fuelType,
         images: finalImages,
+        videos: finalVideos,
         condition,
         location: location || existingCar.location,
         description: description || null,
         vehicleType: vehicleType || existingCar.vehicleType,
+        color: color || null,
+        papers: papers || null,
+        tiktokUrl: tiktokUrl || null,
         sold: sold,
       },
     });
@@ -177,11 +263,26 @@ export async function DELETE(
       );
     }
 
-    // Delete all images from local storage
+    // Delete all images from MinIO storage
     if (car.images && car.images.length > 0) {
       for (const image of car.images) {
-        if (image.startsWith('/uploads/')) {
+        try {
           await deleteImage(image);
+          console.log('Deleted image from storage:', image);
+        } catch (error) {
+          console.warn('Failed to delete image:', image, error);
+        }
+      }
+    }
+
+    // Delete all videos from MinIO storage
+    if (car.videos && car.videos.length > 0) {
+      for (const video of car.videos) {
+        try {
+          await deleteVideo(video);
+          console.log('Deleted video from storage:', video);
+        } catch (error) {
+          console.warn('Failed to delete video:', video, error);
         }
       }
     }

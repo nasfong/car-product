@@ -16,10 +16,14 @@ model Car {
   transmission    String
   fuelType        String
   images          String[] // Array of image URLs
+  videos          String[] @default([]) // Array of video URLs
+  tiktokUrl       String?  // TikTok video URL
   condition       String
   location        String   @default("Phnom Penh")
   description     String?
   vehicleType     String?  // SUV, Sedan, Hatchback, etc.
+  color           String?
+  papers          String?  // Tax paper, Blue book, etc.
   sold            Boolean  @default(false)
   
   createdAt       DateTime @default(now())

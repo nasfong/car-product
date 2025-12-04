@@ -12,12 +12,12 @@
 // Contact Information
 export const CONTACT = {
   telegram: {
-    username: "NasFong",
+    username: "zato_169",
     url: (message: string) => `https://t.me/${CONTACT.telegram.username}?text=${encodeURIComponent(message)}`,
   },
   phone: {
-    primary: "012 345 678",
-    secondary: "098 765 432",
+    primary: "097 6666 093",
+    secondary: "097 7777 093",
   },
   // Add more contact methods as needed
   // email: "contact@example.com",

@@ -45,6 +45,9 @@ interface CarFormData {
   location: string;
   description: string;
   vehicleType: string;
+  color: string;
+  papers: string;
+  tiktokUrl: string;
   sold: boolean;
 }
 
@@ -59,6 +62,9 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [formData, setFormData] = useState<CarFormData>({
     name: "",
     brand: "",
@@ -70,6 +76,9 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     location: "Phnom Penh",
     description: "",
     vehicleType: "Sedan",
+    color: "",
+    papers: "",
+    tiktokUrl: "",
     sold: false,
   });
 
@@ -91,36 +100,97 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             location: data.location || "Phnom Penh",
             description: data.description || "",
             vehicleType: data.vehicleType || "Sedan",
+            color: data.color || "",
+            papers: data.papers || "",
+            tiktokUrl: data.tiktokUrl || "",
             sold: data.sold || false,
           });
           setExistingImages(data.images || []);
+          setExistingVideos(data.videos || []);
         })
         .catch((error) => console.error("Error fetching car:", error));
     }
   }, [carId]);
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    // Save current overflow style
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    
+    // Prevent background scroll
+    document.body.style.overflow = 'hidden';
+    
+    // Cleanup function to restore original overflow when component unmounts
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       console.log('New images selected:', files.map(f => f.name));
-      setImageFiles(files);
       
-      // Create previews for new images
-      const previews: string[] = [];
+      // Add to existing files instead of replacing
+      setImageFiles(prev => [...prev, ...files]);
+      
+      // Create previews for new images and add to existing previews
+      const newPreviews: string[] = [];
       let loadedCount = 0;
       
       files.forEach((file, index) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          previews[index] = reader.result as string;
+          newPreviews[index] = reader.result as string;
           loadedCount++;
           if (loadedCount === files.length) {
-            setImagePreviews(previews);
+            // Add new previews to existing ones
+            setImagePreviews(prev => [...prev, ...newPreviews]);
           }
         };
         reader.readAsDataURL(file);
       });
     }
+    
+    // Clear the input value to allow selecting the same files again if needed
+    e.target.value = '';
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      console.log('New videos selected:', files.map(f => f.name));
+      
+      // Validate file sizes (50MB limit per video)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      const invalidFiles = files.filter(file => file.size > maxSize);
+      
+      if (invalidFiles.length > 0) {
+        alert(`ឯកសារខាងក្រោមធំពេក (អតិបរមា 50MB):\n${invalidFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`).join('\n')}`);
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
+      // Add to existing files instead of replacing
+      setVideoFiles(prev => [...prev, ...files]);
+      
+      // Create previews for new videos and add to existing previews
+      const newPreviews: string[] = [];
+      let loadedCount = 0;
+      
+      files.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        newPreviews[index] = url;
+        loadedCount++;
+        if (loadedCount === files.length) {
+          // Add new previews to existing ones
+          setVideoPreviews(prev => [...prev, ...newPreviews]);
+        }
+      });
+    }
+    
+    // Clear the input value to allow selecting the same files again if needed
+    e.target.value = '';
   };
 
   const removeImage = (index: number, isExisting: boolean) => {
@@ -129,6 +199,19 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     } else {
       setImageFiles(prev => prev.filter((_, i) => i !== index));
       setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const removeVideo = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      setExistingVideos(prev => prev.filter((_, i) => i !== index));
+    } else {
+      // Revoke object URL to prevent memory leaks
+      if (videoPreviews[index]) {
+        URL.revokeObjectURL(videoPreviews[index]);
+      }
+      setVideoFiles(prev => prev.filter((_, i) => i !== index));
+      setVideoPreviews(prev => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -153,13 +236,48 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         data.append("existingImages", JSON.stringify(existingImages));
       }
 
+      // Append existing videos (for updates)
+      if (existingVideos.length > 0) {
+        data.append("existingVideos", JSON.stringify(existingVideos));
+      }
+
       // Append new image files
       if (imageFiles.length > 0) {
         imageFiles.forEach((file, index) => {
           data.append(`images`, file);
         });
-      } else if (!carId && existingImages.length === 0) {
+      }
+
+      // Append new video files
+      if (videoFiles.length > 0) {
+        videoFiles.forEach((file, index) => {
+          data.append(`videos`, file);
+        });
+      }
+
+      // Check if at least one image is provided (images are still required)
+      if (!carId && existingImages.length === 0 && imageFiles.length === 0) {
         alert("Please select at least one image");
+        setLoading(false);
+        return;
+      }
+
+      // Calculate total upload size and validate
+      const totalImageSize = imageFiles.reduce((sum, file) => sum + file.size, 0);
+      const totalVideoSize = videoFiles.reduce((sum, file) => sum + file.size, 0);
+      const totalSize = totalImageSize + totalVideoSize;
+      
+      console.log('File size breakdown:');
+      console.log('- Images:', imageFiles.map(f => `${f.name}: ${(f.size / 1024 / 1024).toFixed(2)}MB`));
+      console.log('- Videos:', videoFiles.map(f => `${f.name}: ${(f.size / 1024 / 1024).toFixed(2)}MB`));
+      console.log('- Total image size:', (totalImageSize / 1024 / 1024).toFixed(2), 'MB');
+      console.log('- Total video size:', (totalVideoSize / 1024 / 1024).toFixed(2), 'MB');
+      console.log('- Total upload size:', (totalSize / 1024 / 1024).toFixed(2), 'MB');
+      
+      // Check if total size exceeds Next.js limit (45MB to leave room for other data)
+      if (totalSize > 45 * 1024 * 1024) {
+        const totalMB = (totalSize / 1024 / 1024).toFixed(1);
+        alert(`ផាំងខ្ទប់សរុបធំពេក! សូមកាត់បន្ថយទំហំឯកសារ ឬចំនួនឯកសារ.\nទំហំអតិបរមា: 45MB\nទំហំបច្ចុប្បន្ន: ${totalMB}MB`);
         setLoading(false);
         return;
       }
@@ -306,6 +424,81 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                       <button
                         type="button"
                         onClick={() => removeImage(index, false)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center text-sm sm:text-xs hover:bg-red-600 touch-manipulation"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Video Upload */}
+          <div className="space-y-3">
+            <label className="block text-base sm:text-sm font-medium text-gray-900">
+              វីដេអូ / Videos (ជម្រើស)
+            </label>
+            <div className="mt-2">
+              <label className="flex flex-col items-center justify-center w-full h-40 sm:h-32 border-2 border-purple-300 border-dashed rounded-lg cursor-pointer bg-purple-50 hover:bg-purple-100 transition-colors touch-manipulation">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg className="w-10 h-10 sm:w-8 sm:h-8 mb-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <p className="mb-1 text-sm sm:text-sm text-purple-600 text-center px-2"><span className="font-semibold">ចុចដើម្បីបញ្ចូលវីដេអូ</span></p>
+                  <p className="text-xs text-purple-500 text-center px-2">MP4, MOV, AVI (អតិបរមា 50MB)</p>
+                </div>
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  onChange={handleVideoChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            
+            {/* Display existing videos */}
+            {existingVideos.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">វីដេអូដែលមានស្រាប់:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {existingVideos.map((video, index) => (
+                    <div key={index} className="relative group">
+                      <video
+                        src={video}
+                        className="w-full h-32 object-cover rounded-lg border"
+                        controls
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(index, true)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center text-sm sm:text-xs hover:bg-red-600 touch-manipulation"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Display new video previews */}
+            {videoPreviews.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">វីដេអូថ្មី:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {videoPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <video
+                        src={preview}
+                        className="w-full h-32 object-cover rounded-lg border"
+                        controls
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(index, false)}
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center text-sm sm:text-xs hover:bg-red-600 touch-manipulation"
                       >
                         ×
@@ -478,7 +671,53 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             />
           </div>
 
+          {/* Color Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              ពណ៌ / Color
+            </label>
+            <input
+              type="text"
+              name="color"
+              value={formData.color}
+              onChange={handleChange}
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="White, Black, Silver..."
+            />
+          </div>
 
+          {/* Papers Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              ឯកសារ / Papers
+            </label>
+            <input
+              type="text"
+              name="papers"
+              value={formData.papers}
+              onChange={handleChange}
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Tax paper, Blue book, Registration..."
+            />
+          </div>
+
+          {/* TikTok URL Field */}
+          <div>
+            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              TikTok Video URL
+            </label>
+            <input
+              type="url"
+              name="tiktokUrl"
+              value={formData.tiktokUrl}
+              onChange={handleChange}
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="https://www.tiktok.com/@username/video/..."
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              បញ្ចូលតំណភ្ជាប់វីដេអូ TikTok ពីរថយន្តនេះ (បេីមាន)
+            </p>
+          </div>
 
           {/* Description Field */}
           <div>
@@ -529,19 +768,21 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           </div>
 
           {/* Footer with Action Buttons - Inside Form */}
-          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 relative z-20">
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
+              style={{ WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none' }}
             >
               បោះបង់
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
+              style={{ WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none' }}
             >
               {loading ? (
                 <span className="flex items-center gap-2">

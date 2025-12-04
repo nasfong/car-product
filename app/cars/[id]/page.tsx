@@ -15,10 +15,14 @@ interface Car {
   transmission: string;
   fuelType: string;
   images: string[];
+  videos: string[];
+  tiktokUrl?: string;
   condition: string;
   location: string;
   description?: string;
   vehicleType?: string;
+  color?: string;
+  papers?: string;
   sold: boolean;
   createdAt: string;
 }
@@ -64,14 +68,23 @@ export default function CarDetailPage() {
 📅 ឆ្នាំ: ${car.year}
 ⚙️ ${car.transmission}
 ⛽ ${car.fuelType}
-🏷️ ${car.condition}
+🏷️ ${car.condition}${car.color ? `\n🎨 ពណ៌: ${car.color}` : ''}
 📍 ${car.location}
+
+🖼️ មើលរូបភាព និង ព័ត៌មានលម្អិត
+${window.location.origin}/cars/${car.id}
 
 សូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
 
     const telegramUrl = CONTACT.telegram.url(message);
 
     window.open(telegramUrl, '_blank');
+  };
+
+  const handlePhoneCall = () => {
+    // Create tel: link to make phone call
+    const phoneNumber = CONTACT.phone.primary.replace(/\s/g, ''); // Remove spaces
+    window.location.href = `tel:+855${phoneNumber.replace('0', '')}`; // Convert to international format
   };
 
   if (loading) {
@@ -123,8 +136,15 @@ export default function CarDetailPage() {
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Image Gallery with Lightbox */}
-          <CarImageGallery images={car.images} carName={car.name} />
+          {/* Media Gallery */}
+          <div className="space-y-6">
+            {/* Media Gallery with Images and Videos */}
+            <CarImageGallery 
+              images={car.images} 
+              videos={car.videos} 
+              carName={car.name} 
+            />
+          </div>
 
           {/* Car Details */}
           <div className="space-y-6">
@@ -155,6 +175,18 @@ export default function CarDetailPage() {
                   <Car className="h-4 w-4" />
                   <span>{car.vehicleType || 'N/A'}</span>
                 </div>
+                {car.color && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="h-4 w-4 rounded-full border border-gray-300 bg-gradient-to-r from-gray-200 to-gray-300"></div>
+                    <span>ពណ៌: {car.color}</span>
+                  </div>
+                )}
+                {car.papers && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FileText className="h-4 w-4" />
+                    <span>ឯកសារ: {car.papers}</span>
+                  </div>
+                )}
               </div>
 
               {/* Location and Condition */}
@@ -177,27 +209,6 @@ export default function CarDetailPage() {
               </div>
             </div>
 
-            {/* Contact Buttons */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">ទំនាក់ទំនងអ្នកលក់</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={handleContactClick}
-                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  <span>ផ្ញើសារតាម Telegram</span>
-                </button>
-                <button
-                  onClick={handleContactClick}
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Phone className="h-5 w-5" />
-                  <span>ទំនាក់ទំនងអ្នកលក់</span>
-                </button>
-              </div>
-            </div>
-
             {/* Description */}
             {car.description && (
               <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -210,6 +221,28 @@ export default function CarDetailPage() {
                 </p>
               </div>
             )}
+
+            {/* Contact Buttons */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">ទំនាក់ទំនងអ្នកលក់</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={handleContactClick}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  <span>ផ្ញើសារតាម Telegram</span>
+                </button>
+                <button
+                  onClick={handlePhoneCall}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Phone className="h-5 w-5" />
+                  <span>ទូរស័ព្ទ: {CONTACT.phone.primary}</span>
+                </button>
+
+              </div>
+            </div>
 
             {/* Additional Info */}
             <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -237,6 +270,19 @@ export default function CarDetailPage() {
                     <span className="font-medium">{car.vehicleType}</span>
                   </div>
                 )}
+                {car.color && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ពណ៌:</span>
+                    <span className="font-medium">{car.color}</span>
+                  </div>
+                )}
+                {car.papers && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ឯកសារ:</span>
+                    <span className="font-medium">{car.papers}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">ស្ថានភាព:</span>
                   <span className="font-medium">{car.condition}</span>
