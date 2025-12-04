@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'minio.nasfong.site',
       },
+      {
+        protocol: 'https',
+        hostname: 'minio-api.nasfong.site',
+      },
     ],
   },
 };
