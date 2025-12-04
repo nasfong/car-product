@@ -16,6 +16,7 @@
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "yet-another-react-lightbox": "^3.25.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

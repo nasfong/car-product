@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import { ArrowLeft, Phone, MessageCircle, MapPin, Calendar, Gauge, Fuel, Settings, Car, FileText } from "lucide-react";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Phone, MessageCircle, MapPin, Calendar, Fuel, Settings, Car, FileText } from "lucide-react";
 import { CONTACT } from "@/lib/constants";
+import CarImageGallery from "@/components/CarImageGallery";
 
 interface Car {
   id: string;
@@ -25,10 +25,8 @@ interface Car {
 
 export default function CarDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (params.id) {
@@ -55,8 +53,10 @@ export default function CarDetailPage() {
   };
 
   const handleContactClick = () => {
-    if (!car) return;
-    
+    if (!car) {
+      return;
+    }
+
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:
 
 🚗 ${car.name} (${car.year})
@@ -68,9 +68,9 @@ export default function CarDetailPage() {
 📍 ${car.location}
 
 សូមផ្តល់ព័ត៌មានបន្ថែម។ អរគុណ!`;
-    
+
     const telegramUrl = CONTACT.telegram.url(message);
-    
+
     window.open(telegramUrl, '_blank');
   };
 
@@ -78,7 +78,7 @@ export default function CarDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
           <p className="mt-4 text-gray-600">កំពុងផ្ទុក...</p>
         </div>
       </div>
@@ -123,41 +123,8 @@ export default function CarDetailPage() {
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-[4/3] bg-gray-200 rounded-xl overflow-hidden">
-              <Image
-                src={car.images[currentImageIndex] || '/placeholder-car.jpg'}
-                alt={`${car.name} - Image ${currentImageIndex + 1}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-            
-            {/* Image Thumbnails */}
-            {car.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {car.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                      currentImageIndex === index ? 'border-blue-500' : 'border-gray-200'
-                    }`}
-                  >
-                    <Image
-                      src={image}
-                      alt={`${car.name} - Thumbnail ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Image Gallery with Lightbox */}
+          <CarImageGallery images={car.images} carName={car.name} />
 
           {/* Car Details */}
           <div className="space-y-6">
@@ -169,7 +136,7 @@ export default function CarDetailPage() {
               <div className="text-lg text-gray-600 mb-4">
                 {car.brand} {car.name} ({car.year})
               </div>
-              
+
               {/* Key Specs */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -200,11 +167,10 @@ export default function CarDetailPage() {
                   <div className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                     {car.condition}
                   </div>
-                  <div className={`inline-block px-3 py-1 text-sm rounded-full ${
-                    car.sold 
-                      ? 'bg-red-100 text-red-800' 
+                  <div className={`inline-block px-3 py-1 text-sm rounded-full ${car.sold
+                      ? 'bg-red-100 text-red-800'
                       : 'bg-green-100 text-green-800'
-                  }`}>
+                    }`}>
                     {car.sold ? 'លក់រួចហើយ' : 'អាចលក់បាន'}
                   </div>
                 </div>
@@ -277,9 +243,8 @@ export default function CarDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">ស្ថានភាពលក់:</span>
-                  <span className={`font-medium ${
-                    car.sold ? 'text-red-600' : 'text-green-600'
-                  }`}>
+                  <span className={`font-medium ${car.sold ? 'text-red-600' : 'text-green-600'
+                    }`}>
                     {car.sold ? 'លក់រួចហើយ' : 'អាចលក់បាន'}
                   </span>
                 </div>
