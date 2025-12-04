@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  car-product:
+    image: nasfong/car-product:latest
+    container_name: car-product
+    networks:
+      traefik: {}   # for public HTTP routing via Traefik
+      proxy: {}     # for internal service aliases
+    environment:
+      DATABASE_URL: postgres://postgres:your_postgres_password@postgres.nasfong.site:443/postgres?sslmode=require
+      # MinIO Configuration
+      MINIO_ENDPOINT: minio-api.nasfong.site
+      MINIO_PORT: 443
+      MINIO_USE_SSL: "true"
+      MINIO_ACCESS_KEY: your_minio_access_key
+      MINIO_SECRET_KEY: your_minio_secret_key
+      MINIO_BUCKET_NAME: car-images
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+      
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+
+      # --- Router --- FIXED: Use backticks and || for multiple domains
+      - "traefik.http.routers.car.rule=Host(`car.nasfong.site`)"
+      - "traefik.http.routers.car.entrypoints=websecure"
+      - "traefik.http.routers.car.tls.certresolver=letsencrypt"  # Changed to letsencrypt
+
+      # --- Service --- FIXED: Changed motor-api to wedding
+      - "traefik.http.services.car.loadbalancer.server.port=3000"
+
+
+networks:
+  traefik:
+    external: true
+  proxy:
+    external: true

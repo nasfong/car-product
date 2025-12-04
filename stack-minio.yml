@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  minio:
+    container_name: minio
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: Rening007minio
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      # MinIO Console
+      - "traefik.http.routers.minio-console.rule=Host(`minio.nasfong.site`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-console.service=minio-console-service"
+      - "traefik.http.services.minio-console-service.loadbalancer.server.port=9001"
+      # MinIO S3 API
+      - "traefik.http.routers.minio-api.rule=Host(`minio-api.nasfong.site`)"
+      - "traefik.http.routers.minio-api.entrypoints=websecure"
+      - "traefik.http.routers.minio-api.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-api.service=minio-api-service"
+      - "traefik.http.services.minio-api-service.loadbalancer.server.port=9000"
+    networks:
+      proxy:
+        aliases:
+          - alias-minio-api
+      traefik: {}
+
+volumes:
+  minio-data:
+    driver: local
+
+networks:
+  traefik:
+    external: true
+  proxy:
+    external: true

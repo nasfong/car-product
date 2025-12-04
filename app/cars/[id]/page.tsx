@@ -113,10 +113,10 @@ export default function CarDetailPage() {
             >
               <ArrowLeft className="h-5 w-5" />
               <span className="hidden sm:inline">ត្រលប់ក្រោយ</span>
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                {car.name} ({car.year})
+              </h1>
             </button>
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-              {car.name} ({car.year})
-            </h1>
           </div>
         </div>
       </header>
@@ -168,8 +168,8 @@ export default function CarDetailPage() {
                     {car.condition}
                   </div>
                   <div className={`inline-block px-3 py-1 text-sm rounded-full ${car.sold
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-green-100 text-green-800'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-green-100 text-green-800'
                     }`}>
                     {car.sold ? 'លក់រួចហើយ' : 'អាចលក់បាន'}
                   </div>

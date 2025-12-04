@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check if user is already authenticated
+  // Always start with false on both server and client
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Only check localStorage after component mounts (client-side only)
+  // This setState in useEffect is intentional to prevent hydration mismatch
+  useEffect(() => {
     const token = localStorage.getItem('admin-token');
-    return !!token;
-  });
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const logout = async () => {
     try {
