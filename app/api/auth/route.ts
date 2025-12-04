@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AUTH } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
-    // Simple admin credentials check (in production, use database and hashed passwords)
-    const validCredentials = {
-      username: 'admin',
-      password: 'admin123' // In production, use hashed passwords
-    };
-    
-    if (username === validCredentials.username && password === validCredentials.password) {
-      const token = 'admin-secret-token-2025'; // In production, generate JWT token
+    if (username === AUTH.admin.username && password === AUTH.admin.password) {
+      const token = AUTH.admin.token;
       
       const response = NextResponse.json({ 
         success: true, 

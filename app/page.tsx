@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import CarForm from "@/components/CarForm";
 import LoginModal from "@/components/LoginModal";
-import { CONTACT } from "@/lib/constants";
+import { CONTACT, STORE } from "@/lib/constants";
 
 interface Car {
   id: string;
@@ -165,8 +165,8 @@ export default function Home() {
           <div className="block sm:hidden">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h1 className="text-lg font-bold">🚗 ហាងលក់រថយន្ត</h1>
-                <p className="text-blue-100 text-xs mt-0.5">Car Showroom Cambodia</p>
+                <h1 className="text-lg font-bold">{STORE.logo} {STORE.name.khmer}</h1>
+                <p className="text-blue-100 text-xs mt-0.5">{STORE.name.english}</p>
               </div>
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
@@ -199,8 +199,8 @@ export default function Home() {
           {/* Desktop Layout - Horizontal */}
           <div className="hidden sm:flex items-center justify-between">
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold">🚗 ហាងលក់រថយន្ត</h1>
-              <p className="text-blue-100 mt-1">Car Showroom Cambodia</p>
+              <h1 className="text-xl lg:text-2xl font-bold">{STORE.logo} {STORE.name.khmer}</h1>
+              <p className="text-blue-100 mt-1">{STORE.name.english}</p>
             </div>
             <div className="flex gap-3 lg:gap-4 items-center">
               {isAuthenticated && (
@@ -353,8 +353,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-white mt-16 py-8">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-lg mb-2">📞 លេខទំនាក់ទំនង: 012 345 678 / 098 765 432</p>
-          <p className="text-gray-400">© 2025 ហាងលក់រថយន្ត - Car Showroom Cambodia</p>
+          <p className="text-lg mb-2">📞 លេខទំនាក់ទំនង: {CONTACT.phone.primary} / {CONTACT.phone.secondary}</p>
+          <p className="text-gray-400">{STORE.copyright} {STORE.name.full}</p>
         </div>
       </footer>
     </div>

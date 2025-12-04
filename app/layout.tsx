@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
 import "./globals.css";
+import { STORE } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,8 +20,8 @@ const notoSansKhmer = Noto_Sans_Khmer({
 });
 
 export const metadata: Metadata = {
-  title: "ហាងលក់រថយន្ត - Car Showroom Cambodia",
-  description: "រថយន្តគុណភាពខ្ពស់ តម្លៃសមរម្យ - Premium cars at reasonable prices",
+  title: STORE.name.full,
+  description: STORE.description.full,
 };
 
 export default function RootLayout({
