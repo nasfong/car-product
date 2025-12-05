@@ -19,7 +19,7 @@ export default function ContactButtons({ car }: { car: Car }) {
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:
 
 🚗 ${car.name}
-💰 តម្លៃ: $${car.price.toLocaleString()}
+💰 តម្លៃ: $${car.price}
 ⚙️ ${car.transmission}
 ⛽ ${car.fuelType}${car.color ? `\n🎨 ពណ៌: ${car.color}` : ''}
 📍 ${car.location}

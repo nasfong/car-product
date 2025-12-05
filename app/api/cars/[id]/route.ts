@@ -177,7 +177,7 @@ export async function PUT(
 
     // Parse and validate form data
     const name = formData.get('name') as string;
-    const priceStr = formData.get('price') as string;
+    const price = formData.get('price') as string;
     const transmission = formData.get('transmission') as string;
     const fuelType = formData.get('fuelType') as string;
     const location = formData.get('location') as string;
@@ -187,16 +187,6 @@ export async function PUT(
     const papers = formData.get('papers') as string;
     const tiktokUrl = formData.get('tiktokUrl') as string;
     const sold = formData.get('sold') === 'true';
-
-    // Convert and validate numeric fields
-    const price = parseFloat(priceStr);
-
-    if (isNaN(price) || price <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid price value' },
-        { status: 400 }
-      );
-    }
 
     // Update car in database
     const updatedCar = await prisma.car.update({
@@ -249,28 +239,41 @@ export async function DELETE(
       );
     }
 
+    console.log('Deleting car with images:', car.images);
+    console.log('Deleting car with videos:', car.videos);
+
     // Delete all images from MinIO storage
     if (car.images && car.images.length > 0) {
+      console.log(`Found ${car.images.length} images to delete`);
       for (const image of car.images) {
         try {
+          console.log('Attempting to delete image:', image);
           await deleteImage(image);
-          console.log('Deleted image from storage:', image);
+          console.log('Successfully deleted image from storage:', image);
         } catch (error) {
-          console.warn('Failed to delete image:', image, error);
+          console.error('Failed to delete image:', image, error);
+          // Don't throw error here, continue with deletion process
         }
       }
+    } else {
+      console.log('No images to delete');
     }
 
     // Delete all videos from MinIO storage
     if (car.videos && car.videos.length > 0) {
+      console.log(`Found ${car.videos.length} videos to delete`);
       for (const video of car.videos) {
         try {
+          console.log('Attempting to delete video:', video);
           await deleteVideo(video);
-          console.log('Deleted video from storage:', video);
+          console.log('Successfully deleted video from storage:', video);
         } catch (error) {
-          console.warn('Failed to delete video:', video, error);
+          console.error('Failed to delete video:', video, error);
+          // Don't throw error here, continue with deletion process
         }
       }
+    } else {
+      console.log('No videos to delete');
     }
 
     // Delete car from database

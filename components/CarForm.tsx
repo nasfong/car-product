@@ -13,7 +13,7 @@ const FUEL_TYPE_OPTIONS = [
   "សាំង",
   "ម៉ាស៊ូត",
   "អគ្គិសនី",
-  "សាំង/អគ្គិសនី (Hybrid)",
+  "សាំង/អាគុយ (Hybrid)",
 ];
 
 const VEHICLE_TYPE_OPTIONS = [
@@ -61,7 +61,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     name: "",
     price: "",
     transmission: "ស្វ័យប្រវត្តិ",
-    fuelType: "សាំង/អគ្គិសនី (Hybrid)",
+    fuelType: "សាំង/អាគុយ (Hybrid)",
     location: "Phnom Penh",
     description: "",
     vehicleType: "Sedan",
@@ -80,7 +80,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           console.log('Fetched car data for editing:', data);
           setFormData({
             name: data.name || "",
-            price: data.price?.toString() || "",
+            price: data.price || "",
             transmission: data.transmission || "ស្វ័យប្រវត្តិ",
             fuelType: data.fuelType || "សាំង",
             location: data.location || "Phnom Penh",
@@ -111,6 +111,17 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       document.body.style.overflow = originalStyle;
     };
   }, []);
+
+  // Handle keyboard submission
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const form = e.currentTarget.closest('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -506,9 +517,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               required
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="តូយ៉ូតា ខេមរី"
+              enterKeyHint="next"
             />
           </div>
 
@@ -518,14 +531,16 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               តម្លៃ USD <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
+              type="text"
               name="price"
               value={formData.price}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               required
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="32000"
               inputMode="numeric"
+              enterKeyHint="next"
             />
           </div>
 
@@ -539,10 +554,12 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="transmission"
               value={formData.transmission}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               list="transmission-options"
               required
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Select or type..."
+              enterKeyHint="next"
             />
             <datalist id="transmission-options">
               {TRANSMISSION_OPTIONS.map((option) => (
@@ -561,10 +578,12 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="fuelType"
               value={formData.fuelType}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               list="fuelType-options"
               required
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Select or type..."
+              enterKeyHint="next"
             />
             <datalist id="fuelType-options">
               {FUEL_TYPE_OPTIONS.map((option) => (
@@ -583,9 +602,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="vehicleType"
               value={formData.vehicleType}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               list="vehicleType-options"
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Select or type..."
+              enterKeyHint="next"
             />
             <datalist id="vehicleType-options">
               {VEHICLE_TYPE_OPTIONS.map((option) => (
@@ -604,9 +625,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="location"
               value={formData.location}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               required
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Phnom Penh"
+              enterKeyHint="next"
             />
           </div>
 
@@ -620,8 +643,10 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="color"
               value={formData.color}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="White, Black, Silver..."
+              enterKeyHint="next"
             />
           </div>
 
@@ -635,8 +660,10 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="papers"
               value={formData.papers}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
               placeholder="Tax paper, Blue book, Registration..."
+              enterKeyHint="next"
             />
           </div>
 
@@ -650,8 +677,10 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="tiktokUrl"
               value={formData.tiktokUrl}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-              placeholder="https://www.tiktok.com/@username/video/..."
+              placeholder="https://www.tiktok.com/@username/video..."
+              enterKeyHint="next"
             />
             <p className="text-xs text-gray-500 mt-1">
               បញ្ចូលតំណភ្ជាប់វីដេអូ TikTok ពីរថយន្តនេះ (បេីមាន)
@@ -667,9 +696,11 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               name="description"
               value={formData.description}
               onChange={handleChange}
+              onKeyDown={handleKeyDown}
               rows={4}
               className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation resize-none"
               placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
+              enterKeyHint="done"
             />
           </div>
 

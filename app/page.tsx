@@ -136,7 +136,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-white mt-16 py-8">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-lg mb-2">📞 លេខទំនាក់ទំនង: {CONTACT.phone.primary} / {CONTACT.phone.secondary}</p>
+          <p className="text-lg mb-2">📞 លេខទំនាក់ទំនង: {CONTACT.phone.primary}
+            {/* / {CONTACT.phone.secondary} */}
+          </p>
           <p className="text-gray-400">{STORE.copyright} {STORE.name.full}</p>
         </div>
       </footer>

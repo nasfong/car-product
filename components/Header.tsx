@@ -15,7 +15,7 @@ export default function Header({ isAuthenticated, onAddCar, onLogout, onShowLogi
         <div className="block sm:hidden">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-lg font-bold">{STORE.logo} {STORE.name.khmer}</h1>
+              <h1 className="text-[30px] font-bold">{STORE.name.khmer}</h1>
               <p className="text-blue-100 text-xs mt-0.5">{STORE.name.english}</p>
             </div>
             {isAuthenticated ? (

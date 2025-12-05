@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const car = await prisma.car.create({
       data: {
         name: formData.get('name') as string,
-        price: parseFloat(formData.get('price') as string),
+        price: formData.get('price') as string,
         transmission: formData.get('transmission') as string,
         fuelType: formData.get('fuelType') as string,
         images: imageUrls,

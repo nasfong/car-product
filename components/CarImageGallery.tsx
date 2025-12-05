@@ -238,7 +238,6 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           borderRadius: 4,
           padding: 4,
           gap: 16,
-          showToggle: true,
         }}
         on={{
           view: handleSlideChange,
@@ -266,7 +265,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
         }}
         styles={{
           container: {
-            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
           },
           thumbnailsContainer: {
             backgroundColor: "rgba(0, 0, 0, 0.8)",

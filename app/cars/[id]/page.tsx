@@ -56,11 +56,11 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${car.name} - $${car.price.toLocaleString()}`,
+    title: `${car.name} - $${car.price}`,
     description: `${car.name} - ${car.transmission}, ${car.fuelType}, ${car.location}. ${car.description || ''}`.slice(0, 160),
     openGraph: {
       title: car.name,
-      description: `$${car.price.toLocaleString()} - ${car.transmission}, ${car.fuelType}`,
+      description: `$${car.price} - ${car.transmission}, ${car.fuelType}`,
       images: car.images.slice(0, 1),
     },
   };
@@ -101,7 +101,7 @@ export default async function CarDetailPage({
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                ${car.price.toLocaleString()}
+                ${car.price}
               </div>
               <div className="text-lg text-gray-600 mb-4">
                 {car.name}
