@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
         fuelType: formData.get('fuelType') as string,
         images: imageUrls,
         videos: videoUrls,
-        condition: formData.get('condition') as string,
         location: formData.get('location') as string || 'Phnom Penh',
         description: formData.get('description') as string || null,
         vehicleType: formData.get('vehicleType') as string || null,

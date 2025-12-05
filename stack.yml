@@ -1,21 +1,26 @@
 version: "3.9"
-
 services:
   car-product:
-    image: nasfong/car-product:latest
+    image: nasfong/car-product:testing
     container_name: car-product
     networks:
       traefik: {}   # for public HTTP routing via Traefik
       proxy: {}     # for internal service aliases
     environment:
-      DATABASE_URL: postgres://postgres:your_postgres_password@postgres.nasfong.site:443/postgres?sslmode=require
-      # MinIO Configuration
-      MINIO_ENDPOINT: minio-api.nasfong.site
-      MINIO_PORT: 443
-      MINIO_USE_SSL: "true"
-      MINIO_ACCESS_KEY: your_minio_access_key
-      MINIO_SECRET_KEY: your_minio_secret_key
+      NODE_ENV: production
+      # PostgreSQL - using internal alias
+      DATABASE_URL: postgres://postgres:your_postgres_password@alias-postgres:5432/postgres?sslmode=disable
+      # MinIO Configuration - using internal alias for upload
+      MINIO_ENDPOINT: alias-minio-api
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: Rening007minio
       MINIO_BUCKET_NAME: car-images
+      # MinIO Public URL - for database storage and public access
+      MINIO_PUBLIC_URL: https://minio-api.nasfong.site
+      # Analytic
+      # NEXT_PUBLIC_GA_MEASUREMENT_ID: G-VTVSE157MQ
     deploy:
       resources:
         limits:
@@ -28,15 +33,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-
-      # --- Router --- FIXED: Use backticks and || for multiple domains
-      - "traefik.http.routers.car.rule=Host(`car.nasfong.site`)"
+      # --- Router ---
+      - "traefik.http.routers.car.rule=Host(`zato.nasfong.site`)"
       - "traefik.http.routers.car.entrypoints=websecure"
-      - "traefik.http.routers.car.tls.certresolver=letsencrypt"  # Changed to letsencrypt
-
-      # --- Service --- FIXED: Changed motor-api to wedding
+      - "traefik.http.routers.car.tls.certresolver=letsencrypt"
+      # --- Service ---
       - "traefik.http.services.car.loadbalancer.server.port=3000"
-
 
 networks:
   traefik:

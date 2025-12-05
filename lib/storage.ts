@@ -1,29 +1,38 @@
 import { uploadToMinio, deleteFromMinio, generateFileName } from './minio';
+import sharp from 'sharp';
 
 /**
- * Save image to MinIO object storage
+ * Save image to MinIO object storage with WebP conversion
+ * Standard resolution with high quality
  */
 export async function saveImage(
   file: Buffer,
   fileName: string
 ): Promise<string> {
   try {
-    // Determine content type from file extension
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    const contentTypeMap: Record<string, string> = {
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'webp': 'image/webp',
-    };
-    const contentType = contentTypeMap[ext || 'jpg'] || 'image/jpeg';
+    // Convert image to WebP format - better performance without quality loss
+    const webpBuffer = await sharp(file)
+      .rotate() // Auto-rotate based on EXIF orientation
+      .resize(1920, 1920, { 
+        fit: 'inside', 
+        withoutEnlargement: true // Never upscale, only downscale if too large
+      }) // Max Full HD resolution (1920px) - standard for web
+      .webp({ 
+        quality: 90,      // High quality - excellent for web
+        effort: 3,        // Balanced compression effort
+        smartSubsample: true // Better color handling
+      })
+      .toBuffer();
 
+    // Change extension to .webp
+    const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+    const webpFileName = `${nameWithoutExt}.webp`;
+    
     // Generate unique filename with cars/ prefix
-    const uniqueFileName = generateFileName(fileName);
+    const uniqueFileName = generateFileName(webpFileName);
     
     // Upload to MinIO and return public URL
-    const url = await uploadToMinio(file, uniqueFileName, contentType);
+    const url = await uploadToMinio(webpBuffer, uniqueFileName, 'image/webp');
     
     return url;
   } catch (error) {

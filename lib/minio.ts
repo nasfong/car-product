@@ -4,7 +4,7 @@ import { Client } from 'minio';
 export const minioClient = new Client({
   endPoint: process.env.MINIO_ENDPOINT || 'minio-api.nasfong.site',
   port: parseInt(process.env.MINIO_PORT || '443'),
-  useSSL: process.env.MINIO_USE_SSL === 'true' || true,
+  useSSL: process.env.MINIO_USE_SSL !== 'false',
   accessKey: process.env.MINIO_ACCESS_KEY || '',
   secretKey: process.env.MINIO_SECRET_KEY || '',
 });
@@ -83,8 +83,16 @@ export async function deleteFromMinio(fileName: string): Promise<void> {
  * Get public URL for MinIO object
  */
 export function getMinioUrl(fileName: string): string {
+  const publicUrl = process.env.MINIO_PUBLIC_URL;
+  
+  if (publicUrl) {
+    // MINIO_PUBLIC_URL already includes protocol (https://minio-api.nasfong.site)
+    return `${publicUrl}/${BUCKET_NAME}/${fileName}`;
+  }
+  
+  // Fallback for local dev without MINIO_PUBLIC_URL
   const endpoint = process.env.MINIO_ENDPOINT || 'minio-api.nasfong.site';
-  const useSSL = process.env.MINIO_USE_SSL === 'true' || true;
+  const useSSL = process.env.MINIO_USE_SSL !== 'false';
   const protocol = useSSL ? 'https' : 'http';
   return `${protocol}://${endpoint}/${BUCKET_NAME}/${fileName}`;
 }

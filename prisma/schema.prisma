@@ -16,7 +16,6 @@ model Car {
   images          String[] // Array of image URLs
   videos          String[] @default([]) // Array of video URLs
   tiktokUrl       String?  // TikTok video URL
-  condition       String
   location        String   @default("Phnom Penh")
   description     String?
   vehicleType     String?  // SUV, Sedan, Hatchback, etc.

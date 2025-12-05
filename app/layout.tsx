@@ -31,6 +31,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://minio-api.nasfong.site" />
+        <link rel="dns-prefetch" href="https://minio-api.nasfong.site" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansKhmer.variable} antialiased`}
         suppressHydrationWarning

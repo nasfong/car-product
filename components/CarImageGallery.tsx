@@ -92,8 +92,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               src={slides[0]?.src || '/placeholder-car.jpg'}
               alt={`${carName} - Main Image`}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
+              quality={80}
             />
             {/* Zoom Icon Overlay for Image */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
@@ -154,10 +156,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                 <>
                   <video
                     src={slide.src}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-full object-cover"
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     onLoadedMetadata={(e) => {
                       // Set initial position to middle of video when metadata loads
                       const video = e.currentTarget;
@@ -179,7 +181,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                   src={slide.src}
                   alt={`${carName} - Thumbnail ${index + 2}`}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="object-cover"
+                  sizes="(max-width: 640px) 80px, 120px"
+                  quality={70}
+                  loading="lazy"
                 />
               )}
               {/* Hover Overlay */}
@@ -261,20 +266,14 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
         }}
         styles={{
           container: {
-            backgroundColor: "rgba(255, 255, 255, 0.25)",
-            backdropFilter: "blur(40px) saturate(180%)",
-            WebkitBackdropFilter: "blur(40px) saturate(180%)",
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
           },
           thumbnailsContainer: {
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
-            borderTop: "1px solid rgba(255, 255, 255, 0.3)",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.1)",
           },
           thumbnail: {
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
             border: "1px solid rgba(255, 255, 255, 0.2)",
           },
         }}

@@ -180,7 +180,6 @@ export async function PUT(
     const priceStr = formData.get('price') as string;
     const transmission = formData.get('transmission') as string;
     const fuelType = formData.get('fuelType') as string;
-    const condition = formData.get('condition') as string;
     const location = formData.get('location') as string;
     const description = formData.get('description') as string;
     const vehicleType = formData.get('vehicleType') as string;
@@ -209,14 +208,13 @@ export async function PUT(
         fuelType,
         images: finalImages,
         videos: finalVideos,
-        condition,
         location: location || existingCar.location,
         description: description || null,
         vehicleType: vehicleType || existingCar.vehicleType,
         color: color || null,
         papers: papers || null,
         tiktokUrl: tiktokUrl || null,
-        sold: sold,
+        sold,
       },
     });
 

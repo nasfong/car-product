@@ -8,7 +8,6 @@ export interface Car {
   fuelType: string;
   images: string[];
   videos: string[];
-  condition: string;
   location: string;
   description?: string;
   vehicleType?: string;

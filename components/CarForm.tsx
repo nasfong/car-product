@@ -16,11 +16,6 @@ const FUEL_TYPE_OPTIONS = [
   "សាំង/អគ្គិសនី (Hybrid)",
 ];
 
-const CONDITION_OPTIONS = [
-  "ថ្មី",
-  "បានប្រើប្រាស់",
-];
-
 const VEHICLE_TYPE_OPTIONS = [
   "Sedan",
   "SUV", 
@@ -39,7 +34,6 @@ interface CarFormData {
   price: string;
   transmission: string;
   fuelType: string;
-  condition: string;
   location: string;
   description: string;
   vehicleType: string;
@@ -68,7 +62,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     price: "",
     transmission: "ស្វ័យប្រវត្តិ",
     fuelType: "សាំង/អគ្គិសនី (Hybrid)",
-    condition: "បានប្រើប្រាស់",
     location: "Phnom Penh",
     description: "",
     vehicleType: "Sedan",
@@ -90,7 +83,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             price: data.price?.toString() || "",
             transmission: data.transmission || "ស្វ័យប្រវត្តិ",
             fuelType: data.fuelType || "សាំង",
-            condition: data.condition || "Used",
             location: data.location || "Phnom Penh",
             description: data.description || "",
             vehicleType: data.vehicleType || "Sedan",
@@ -581,28 +573,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             </datalist>
           </div>
 
-          {/* Condition Field */}
-          <div>
-            <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
-              ស្ថានភាព <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="condition"
-              value={formData.condition}
-              onChange={handleChange}
-              list="condition-options"
-              required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-              placeholder="Select or type..."
-            />
-            <datalist id="condition-options">
-              {CONDITION_OPTIONS.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
-          </div>
-
           {/* Vehicle Type Field */}
           <div>
             <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
@@ -718,7 +688,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                   onChange={() => setFormData(prev => ({ ...prev, sold: false }))}
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="text-base sm:text-sm text-gray-700">អាចលក់បាន (Available)</span>
+                <span className="text-base sm:text-sm text-gray-700">រៀបចំរួចរាល់</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
                 <input
@@ -729,7 +699,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                   onChange={() => setFormData(prev => ({ ...prev, sold: true }))}
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="text-base sm:text-sm text-gray-700">លក់រួចហើយ (Sold)</span>
+                <span className="text-base sm:text-sm text-gray-700">លក់ចេញហើយ</span>
               </label>
             </div>
           </div>

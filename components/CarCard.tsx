@@ -18,7 +18,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
       {car.sold && (
         <div className="absolute top-3 right-[-25] z-10">
           <div className="bg-red-500 text-white text-sm sm:text-base px-12 sm:px-12 py-1.5 sm:py-2 font-bold transform rotate-30 shadow-xl">
-            លក់រួចហើយ
+            លក់ចេញហើយ
           </div>
         </div>
       )}
@@ -49,13 +49,6 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
           {car.name}
         </h4>
 
-        {/* Condition */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
-            {car.condition}
-          </span>
-        </div>
-
         {/* Location */}
         <div className="flex items-center gap-1 mb-2">
           <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,12 +66,12 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
               <span className="text-xs text-gray-600">ពណ៌: {car.color}</span>
             </div>
           )}
-          {car.papers && (
-            <div className="flex items-center gap-1">
-              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {car.description && (
+            <div className="flex items-start gap-1">
+              <svg className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="text-xs text-gray-600 line-clamp-1">ឯកសារ: {car.papers}</span>
+              <span className="text-xs text-gray-600 line-clamp-2">{car.description}</span>
             </div>
           )}
         </div>
