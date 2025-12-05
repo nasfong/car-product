@@ -177,9 +177,7 @@ export async function PUT(
 
     // Parse and validate form data
     const name = formData.get('name') as string;
-    const brand = formData.get('brand') as string;
     const priceStr = formData.get('price') as string;
-    const yearStr = formData.get('year') as string;
     const transmission = formData.get('transmission') as string;
     const fuelType = formData.get('fuelType') as string;
     const condition = formData.get('condition') as string;
@@ -193,18 +191,10 @@ export async function PUT(
 
     // Convert and validate numeric fields
     const price = parseFloat(priceStr);
-    const year = parseInt(yearStr);
 
     if (isNaN(price) || price <= 0) {
       return NextResponse.json(
         { error: 'Invalid price value' },
-        { status: 400 }
-      );
-    }
-
-    if (isNaN(year) || year < 1900 || year > new Date().getFullYear() + 1) {
-      return NextResponse.json(
-        { error: 'Invalid year value' },
         { status: 400 }
       );
     }
@@ -214,9 +204,7 @@ export async function PUT(
       where: { id },
       data: {
         name,
-        brand,
         price,
-        year,
         transmission,
         fuelType,
         images: finalImages,

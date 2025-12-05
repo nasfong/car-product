@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
@@ -126,18 +127,45 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               key={index}
               onClick={() => openLightbox(index + 1)}
               className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-colors cursor-pointer group"
+              onMouseEnter={(e) => {
+                // Auto-play video on hover from the middle
+                if (slide.type === 'video') {
+                  const video = e.currentTarget.querySelector('video') as HTMLVideoElement;
+                  if (video) {
+                    // Start from 50% of video duration (e.g., 16s for 33s video)
+                    video.currentTime = video.duration * 0.5;
+                    video.play().catch(() => {});
+                  }
+                }
+              }}
+              onMouseLeave={(e) => {
+                // Pause video when mouse leaves and reset to middle
+                if (slide.type === 'video') {
+                  const video = e.currentTarget.querySelector('video') as HTMLVideoElement;
+                  if (video) {
+                    video.pause();
+                    video.currentTime = video.duration * 0.5; // Reset to middle
+                  }
+                }
+              }}
             >
               {slide.type === 'video' ? (
-                // Video thumbnail with play icon
+                // Video thumbnail that plays on hover
                 <>
                   <video
                     src={slide.src}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     muted
+                    playsInline
                     preload="metadata"
+                    onLoadedMetadata={(e) => {
+                      // Set initial position to middle of video when metadata loads
+                      const video = e.currentTarget;
+                      video.currentTime = video.duration * 0.5;
+                    }}
                   />
-                  {/* Play Icon Overlay */}
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  {/* Play Icon Overlay - shown when not hovering */}
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
                     <div className="bg-white/90 rounded-full p-2">
                       <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
@@ -196,7 +224,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           };
         })}
         index={currentIndex}
-        plugins={[Thumbnails]}
+        plugins={[Thumbnails, Zoom]}
         thumbnails={{
           position: "bottom",
           width: 120,
@@ -219,6 +247,36 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
         }}
         controller={{
           closeOnBackdropClick: true,
+        }}
+        zoom={{
+          maxZoomPixelRatio: 3,
+          zoomInMultiplier: 2,
+          doubleTapDelay: 300,
+          doubleClickDelay: 300,
+          doubleClickMaxStops: 2,
+          keyboardMoveDistance: 50,
+          wheelZoomDistanceFactor: 100,
+          pinchZoomDistanceFactor: 100,
+          scrollToZoom: true,
+        }}
+        styles={{
+          container: {
+            backgroundColor: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(40px) saturate(180%)",
+            WebkitBackdropFilter: "blur(40px) saturate(180%)",
+          },
+          thumbnailsContainer: {
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(30px) saturate(180%)",
+            WebkitBackdropFilter: "blur(30px) saturate(180%)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.3)",
+          },
+          thumbnail: {
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          },
         }}
         render={{
           slide: ({ slide }) => {

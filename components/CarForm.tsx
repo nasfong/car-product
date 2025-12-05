@@ -36,9 +36,7 @@ const VEHICLE_TYPE_OPTIONS = [
 
 interface CarFormData {
   name: string;
-  brand: string;
   price: string;
-  year: string;
   transmission: string;
   fuelType: string;
   condition: string;
@@ -67,9 +65,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [formData, setFormData] = useState<CarFormData>({
     name: "",
-    brand: "",
     price: "",
-    year: "",
     transmission: "ស្វ័យប្រវត្តិ",
     fuelType: "សាំង/អគ្គិសនី (Hybrid)",
     condition: "បានប្រើប្រាស់",
@@ -91,9 +87,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           console.log('Fetched car data for editing:', data);
           setFormData({
             name: data.name || "",
-            brand: data.brand || "",
             price: data.price?.toString() || "",
-            year: data.year?.toString() || "",
             transmission: data.transmission || "ស្វ័យប្រវត្តិ",
             fuelType: data.fuelType || "សាំង",
             condition: data.condition || "Used",
@@ -526,39 +520,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             />
           </div>
 
-          {/* Brand Field */}
-          <div>
-            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
-              ម៉ាក <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="brand"
-              value={formData.brand}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-              placeholder="Toyota"
-            />
-          </div>
-
-          {/* Year Field */}
-          <div>
-            <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
-              ឆ្នាំ <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-              placeholder="2024"
-              inputMode="numeric"
-            />
-          </div>
-
           {/* Price Field */}
           <div>
             <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
@@ -581,19 +542,21 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
               ប្រអប់លេខ <span className="text-red-500">*</span>
             </label>
-            <select
+            <input
+              type="text"
               name="transmission"
               value={formData.transmission}
               onChange={handleChange}
+              list="transmission-options"
               required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
-            >
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Select or type..."
+            />
+            <datalist id="transmission-options">
               {TRANSMISSION_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+                <option key={option} value={option} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {/* Fuel Type Field */}
@@ -601,19 +564,21 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
               ប្រភេតប្រេង <span className="text-red-500">*</span>
             </label>
-            <select
+            <input
+              type="text"
               name="fuelType"
               value={formData.fuelType}
               onChange={handleChange}
+              list="fuelType-options"
               required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
-            >
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Select or type..."
+            />
+            <datalist id="fuelType-options">
               {FUEL_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+                <option key={option} value={option} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {/* Condition Field */}
@@ -621,19 +586,21 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
               ស្ថានភាព <span className="text-red-500">*</span>
             </label>
-            <select
+            <input
+              type="text"
               name="condition"
               value={formData.condition}
               onChange={handleChange}
+              list="condition-options"
               required
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
-            >
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Select or type..."
+            />
+            <datalist id="condition-options">
               {CONDITION_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+                <option key={option} value={option} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {/* Vehicle Type Field */}
@@ -641,18 +608,20 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
               ប្រភេទរថយន្ត
             </label>
-            <select
+            <input
+              type="text"
               name="vehicleType"
               value={formData.vehicleType}
               onChange={handleChange}
-              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white touch-manipulation"
-            >
+              list="vehicleType-options"
+              className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+              placeholder="Select or type..."
+            />
+            <datalist id="vehicleType-options">
               {VEHICLE_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+                <option key={option} value={option} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {/* Location Field */}
@@ -768,7 +737,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           </div>
 
           {/* Footer with Action Buttons - Inside Form */}
-          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 relative z-20">
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 relative z-20 mb-20">
             <button
               type="button"
               onClick={onCancel}

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     
     // Get image files
     const imageFiles = formData.getAll('images') as File[];
-    let imageUrls: string[] = [];
+    const imageUrls: string[] = [];
 
     if (imageFiles.length > 0) {
       for (const file of imageFiles) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Get video files
     const videoFiles = formData.getAll('videos') as File[];
-    let videoUrls: string[] = [];
+    const videoUrls: string[] = [];
 
     if (videoFiles.length > 0) {
       for (const file of videoFiles) {
@@ -90,9 +90,7 @@ export async function POST(request: NextRequest) {
     const car = await prisma.car.create({
       data: {
         name: formData.get('name') as string,
-        brand: formData.get('brand') as string,
         price: parseFloat(formData.get('price') as string),
-        year: parseInt(formData.get('year') as string),
         transmission: formData.get('transmission') as string,
         fuelType: formData.get('fuelType') as string,
         images: imageUrls,

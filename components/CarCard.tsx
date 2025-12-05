@@ -16,8 +16,8 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
     >
       {/* Sold Badge - Top Right Corner */}
       {car.sold && (
-        <div className="absolute top-2 right-[-20] z-10">
-          <div className="bg-red-500 text-white text-xs px-8 py-1 font-medium transform rotate-30 shadow-lg">
+        <div className="absolute top-3 right-[-25] z-10">
+          <div className="bg-red-500 text-white text-sm sm:text-base px-12 sm:px-12 py-1.5 sm:py-2 font-bold transform rotate-30 shadow-xl">
             លក់រួចហើយ
           </div>
         </div>
@@ -49,11 +49,8 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
           {car.name}
         </h4>
 
-        {/* Year and Condition */}
+        {/* Condition */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded">
-            {car.year}
-          </span>
           <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
             {car.condition}
           </span>

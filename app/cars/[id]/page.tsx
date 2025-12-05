@@ -9,9 +9,7 @@ import CarImageGallery from "@/components/CarImageGallery";
 interface Car {
   id: string;
   name: string;
-  brand: string;
   price: number;
-  year: number;
   transmission: string;
   fuelType: string;
   images: string[];
@@ -63,9 +61,8 @@ export default function CarDetailPage() {
 
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:
 
-🚗 ${car.name} (${car.year})
+🚗 ${car.name}
 💰 តម្លៃ: $${car.price.toLocaleString()}
-📅 ឆ្នាំ: ${car.year}
 ⚙️ ${car.transmission}
 ⛽ ${car.fuelType}
 🏷️ ${car.condition}${car.color ? `\n🎨 ពណ៌: ${car.color}` : ''}
@@ -127,7 +124,7 @@ ${window.location.origin}/cars/${car.id}
               <ArrowLeft className="h-5 w-5" />
               <span className="hidden sm:inline">ត្រលប់ក្រោយ</span>
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                {car.name} ({car.year})
+                {car.name}
               </h1>
             </button>
           </div>
@@ -139,10 +136,10 @@ ${window.location.origin}/cars/${car.id}
           {/* Media Gallery */}
           <div className="space-y-6">
             {/* Media Gallery with Images and Videos */}
-            <CarImageGallery 
-              images={car.images} 
-              videos={car.videos} 
-              carName={car.name} 
+            <CarImageGallery
+              images={car.images}
+              videos={car.videos}
+              carName={car.name}
             />
           </div>
 
@@ -154,15 +151,11 @@ ${window.location.origin}/cars/${car.id}
                 ${car.price.toLocaleString()}
               </div>
               <div className="text-lg text-gray-600 mb-4">
-                {car.brand} {car.name} ({car.year})
+                {car.name}
               </div>
 
               {/* Key Specs */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  <span>{car.year}</span>
-                </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Settings className="h-4 w-4" />
                   <span>{car.transmission}</span>
@@ -247,7 +240,7 @@ ${window.location.origin}/cars/${car.id}
                     className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M19.321 5.562a5.124 5.124 0 0 1-.443-.258 6.228 6.228 0 0 1-1.137-.966c-.849-.849-1.154-1.996-1.154-2.964C16.587.591 16.03 0 15.348 0h-3.313c-.682 0-1.239.591-1.239 1.374v11.289c0 1.289-.8 2.391-1.929 2.776-.674.23-1.394.154-2-.207a2.79 2.79 0 0 1-1.563-2.513c0-1.547 1.26-2.807 2.807-2.807.682 0 1.239-.557 1.239-1.239V5.36c0-.682-.557-1.239-1.239-1.239C4.26 4.121 1 7.381 1 11.232c0 2.807 1.674 5.387 4.264 6.514 1.017.443 2.077.66 3.15.66.683 0 1.37-.087 2.043-.26 2.807-.721 4.764-3.29 4.764-6.262V8.796c1.29.8 2.807 1.239 4.386 1.239.682 0 1.239-.557 1.239-1.239V6.8c0-.682-.557-1.239-1.239-1.239-.43 0-.849-.087-1.286-.174z"/>
+                      <path d="M19.321 5.562a5.124 5.124 0 0 1-.443-.258 6.228 6.228 0 0 1-1.137-.966c-.849-.849-1.154-1.996-1.154-2.964C16.587.591 16.03 0 15.348 0h-3.313c-.682 0-1.239.591-1.239 1.374v11.289c0 1.289-.8 2.391-1.929 2.776-.674.23-1.394.154-2-.207a2.79 2.79 0 0 1-1.563-2.513c0-1.547 1.26-2.807 2.807-2.807.682 0 1.239-.557 1.239-1.239V5.36c0-.682-.557-1.239-1.239-1.239C4.26 4.121 1 7.381 1 11.232c0 2.807 1.674 5.387 4.264 6.514 1.017.443 2.077.66 3.15.66.683 0 1.37-.087 2.043-.26 2.807-.721 4.764-3.29 4.764-6.262V8.796c1.29.8 2.807 1.239 4.386 1.239.682 0 1.239-.557 1.239-1.239V6.8c0-.682-.557-1.239-1.239-1.239-.43 0-.849-.087-1.286-.174z" />
                     </svg>
                     <span>មើលវីដេអូ TikTok</span>
                   </button>
@@ -260,14 +253,6 @@ ${window.location.origin}/cars/${car.id}
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">ព័ត៌មានលម្អិត</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ម៉ាក:</span>
-                  <span className="font-medium">{car.brand}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ឆ្នាំ:</span>
-                  <span className="font-medium">{car.year}</span>
-                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">ប្រអប់លេខ:</span>
                   <span className="font-medium">{car.transmission}</span>

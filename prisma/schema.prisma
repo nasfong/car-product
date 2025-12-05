@@ -10,9 +10,7 @@ datasource db {
 model Car {
   id              String   @id @default(cuid())
   name            String
-  brand           String
   price           Float
-  year            Int
   transmission    String
   fuelType        String
   images          String[] // Array of image URLs
