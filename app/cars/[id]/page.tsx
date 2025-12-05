@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Phone, MessageCircle, MapPin, Calendar, Fuel, Settings, Car, FileText } from "lucide-react";
 import { CONTACT } from "@/lib/constants";
 import CarImageGallery from "@/components/CarImageGallery";
+import { analytics } from "@/lib/analytics";
 
 interface Car {
   id: string;
@@ -36,6 +37,13 @@ export default function CarDetailPage() {
     }
   }, [params.id]);
 
+  // Track car view when car data is loaded
+  useEffect(() => {
+    if (car) {
+      analytics.carViewed(car.id, car.name, car.price);
+    }
+  }, [car]);
+
   const fetchCar = async (id: string) => {
     try {
       const response = await fetch(`/api/cars/${id}`);
@@ -59,6 +67,9 @@ export default function CarDetailPage() {
       return;
     }
 
+    // Track contact click
+    analytics.contactClicked('telegram', car.id, car.name);
+
     const message = `សួស្តី! ខ្ញុំចាប់អារម្មណ៍លើរថយន្តនេះ:
 
 🚗 ${car.name}
@@ -79,6 +90,13 @@ ${window.location.origin}/cars/${car.id}
   };
 
   const handlePhoneCall = () => {
+    if (!car) {
+      return;
+    }
+
+    // Track phone call click
+    analytics.contactClicked('phone', car.id, car.name);
+
     // Create tel: link to make phone call
     const phoneNumber = CONTACT.phone.primary.replace(/\s/g, ''); // Remove spaces
     window.location.href = `tel:+855${phoneNumber.replace('0', '')}`; // Convert to international format
@@ -140,6 +158,7 @@ ${window.location.origin}/cars/${car.id}
               images={car.images}
               videos={car.videos}
               carName={car.name}
+              carId={car.id}
             />
           </div>
 
@@ -236,7 +255,10 @@ ${window.location.origin}/cars/${car.id}
 
                 {car.tiktokUrl && (
                   <button
-                    onClick={() => window.open(car.tiktokUrl, '_blank')}
+                    onClick={() => {
+                      analytics.tiktokClicked(car.id);
+                      window.open(car.tiktokUrl, '_blank');
+                    }}
                     className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

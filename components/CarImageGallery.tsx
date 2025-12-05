@@ -7,14 +7,16 @@ import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
+import { analytics } from "@/lib/analytics";
 
 interface CarImageGalleryProps {
   images: string[];
   videos?: string[];
   carName: string;
+  carId?: string;
 }
 
-export default function CarImageGallery({ images, videos = [], carName }: CarImageGalleryProps) {
+export default function CarImageGallery({ images, videos = [], carName, carId }: CarImageGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -58,6 +60,11 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
   const openLightbox = (index: number) => {
     setCurrentIndex(index);
     setLightboxOpen(true);
+    
+    // Track gallery opened
+    if (carId) {
+      analytics.imageGalleryOpened(carId, images.length, videos.length > 0);
+    }
   };
 
   return (
