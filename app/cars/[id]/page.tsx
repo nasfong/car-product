@@ -101,7 +101,7 @@ export default async function CarDetailPage({
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                ${car.price}
+                {car.price}
               </div>
               <div className="text-lg text-gray-600 mb-4">
                 {car.name}

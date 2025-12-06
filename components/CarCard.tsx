@@ -1,22 +1,72 @@
 import Image from "next/image";
 import { Car } from "@/lib/types";
 import { memo } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface CarCardProps {
   car: Car;
   isAuthenticated: boolean;
   onEdit: (carId: string) => void;
   onDelete: (carId: string, carName: string) => void;
+  isDragging?: boolean;
+  showDragHandle?: boolean;
+  isOverlay?: boolean;
 }
-function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
+function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, showDragHandle = false, isOverlay = false }: CarCardProps) {
+  // Only use sortable hook when drag functionality is needed
+  const sortableData = showDragHandle && !isOverlay ? useSortable({ id: car.id }) : null;
+  
+  const {
+    attributes = {},
+    listeners = {},
+    setNodeRef = undefined,
+    transform = null,
+    transition = undefined,
+    isDragging: isSortableDragging = false,
+  } = sortableData || {};
+
+  const style = sortableData ? {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging || isSortableDragging ? 0.5 : 1,
+  } : {};
+
+  // Apply drag props only when needed
+  const dragProps = sortableData && !isOverlay ? { ref: setNodeRef, style } : {};
+
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group relative"
-      onClick={() => window.location.href = `/cars/${car.id}`}
+      {...dragProps}
+      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group relative ${isDragging || isSortableDragging ? 'shadow-2xl scale-105' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
+      onClick={() => !isDragging && !isSortableDragging && (window.location.href = `/cars/${car.id}`)}
     >
+      {/* Drag Handle - Top Right Corner - Only render if needed */}
+      {showDragHandle && !isOverlay && sortableData && (
+        <div 
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 right-2 z-20 bg-gray-600/80 hover:bg-gray-700 text-white p-3 rounded-full cursor-pointer hover:cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-200"
+          style={{
+            touchAction: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+      )}
+
       {/* Sold Badge - Top Right Corner */}
       {car.sold && (
-        <div className="absolute top-3 right-[-25] z-10">
+        <div className={`absolute top-3 z-10 ${showDragHandle ? 'right-[-25px]' : 'right-[-25px]'}`}>
           <div className="bg-red-500 text-white text-sm sm:text-base px-12 sm:px-12 py-1.5 sm:py-2 font-bold transform rotate-30 shadow-xl">
             លក់ចេញហើយ
           </div>
@@ -77,12 +127,12 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete }: CarCardProps) {
         {/* Price */}
         <div className="mb-4">
           <span className="text-lg font-bold text-green-600">
-            ${car.price}
+            {car.price}
           </span>
         </div>
 
         {/* Admin buttons - mobile-friendly */}
-        {isAuthenticated && (
+        {isAuthenticated && !isOverlay && (
           <div className="flex gap-2">
             <button
               onClick={(e) => {

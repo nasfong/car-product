@@ -47,11 +47,16 @@ export function useCars() {
     fetchCars();
   }, [fetchCars]);
 
+  const updateCarsOrder = useCallback((newCars: Car[]) => {
+    setCars(newCars);
+  }, []);
+
   return {
     cars,
     loading,
     error,
     fetchCars,
     deleteCar,
+    updateCarsOrder,
   };
 }

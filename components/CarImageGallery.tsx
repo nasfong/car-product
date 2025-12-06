@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
@@ -8,10 +8,160 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
+// Global thumbnail cache to persist thumbnails across component mounts/unmounts
+const thumbnailCache = new Map<string, string>();
+
 interface CarImageGalleryProps {
   images: string[];
   videos?: string[];
   carName: string;
+}
+
+interface VideoThumbnailComponentProps {
+  videoUrl: string;
+  className?: string;
+}
+
+function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponentProps) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(() => 
+    // Check cache first
+     thumbnailCache.get(videoUrl) || null
+  );
+  const [isLoading, setIsLoading] = useState(() => 
+    // If we have cached thumbnail, don't show loading
+     !thumbnailCache.has(videoUrl)
+  );
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasGeneratedRef = useRef(false);
+
+  useEffect(() => {
+    // If we already have a cached thumbnail, use it
+    const cachedThumbnail = thumbnailCache.get(videoUrl);
+    if (cachedThumbnail) {
+      setThumbnailUrl(cachedThumbnail);
+      setIsLoading(false);
+      return;
+    }
+
+    // If we've already tried to generate for this URL, don't try again
+    if (hasGeneratedRef.current) return;
+
+    const generateThumbnail = async () => {
+      if (!videoRef.current || !canvasRef.current) return;
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return;
+
+      const handleLoadedData = () => {
+        // Set video to 5 seconds or 10% of duration, whichever is smaller
+        const targetTime = Math.min(5, video.duration * 0.1);
+        video.currentTime = targetTime;
+      };
+
+      const handleSeeked = () => {
+        try {
+          // Set canvas dimensions to match video
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          // Draw the current video frame
+          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+          
+          // Convert canvas to blob and create URL
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              // Cache the thumbnail
+              thumbnailCache.set(videoUrl, url);
+              setThumbnailUrl(url);
+              setIsLoading(false);
+              hasGeneratedRef.current = true;
+            }
+          }, 'image/jpeg', 0.8);
+        } catch (error) {
+          console.error('Error generating thumbnail:', error);
+          setIsLoading(false);
+          hasGeneratedRef.current = true;
+        }
+      };
+
+      video.addEventListener('loadeddata', handleLoadedData);
+      video.addEventListener('seeked', handleSeeked);
+
+      // Start loading the video
+      video.load();
+
+      return () => {
+        video.removeEventListener('loadeddata', handleLoadedData);
+        video.removeEventListener('seeked', handleSeeked);
+      };
+    };
+
+    generateThumbnail();
+  }, [videoUrl]);
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Hidden video for thumbnail generation */}
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className="hidden"
+        muted
+        playsInline
+        preload="metadata"
+        crossOrigin="anonymous"
+      />
+      
+      {/* Hidden canvas for frame capture */}
+      <canvas ref={canvasRef} className="hidden" />
+      
+      {/* Show loading state or thumbnail */}
+      {isLoading ? (
+        <div className={`${className} bg-gray-200 flex items-center justify-center`}>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        </div>
+      ) : thumbnailUrl ? (
+        <>
+          <img
+            src={thumbnailUrl}
+            alt="Video thumbnail"
+            className={className}
+          />
+          {/* Play Icon Overlay */}
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
+            <div className="bg-white/90 rounded-full p-2">
+              <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        </>
+      ) : (
+        // Fallback to default video display
+        <>
+          <video
+            src={videoUrl}
+            className={className}
+            muted
+            playsInline
+            preload="metadata"
+          />
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
+            <div className="bg-white/90 rounded-full p-2">
+              <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function CarImageGallery({ images, videos = [], carName }: CarImageGalleryProps) {
@@ -68,15 +218,13 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
         onClick={() => openLightbox(0)}
       >
         {slides[0]?.type === 'video' ? (
-          // Video main display
-          <>
-            <video
-              src={slides[0].src}
+          // Video main display with thumbnail from first 5s
+          <div className="relative w-full h-full">
+            <VideoThumbnailComponent
+              videoUrl={slides[0].src}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              muted
-              preload="metadata"
             />
-            {/* Play Icon Overlay for Video */}
+            {/* Large Play Icon Overlay for Main Video */}
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
               <div className="bg-white/90 rounded-full p-4 group-hover:bg-white transition-colors duration-300">
                 <svg className="w-12 h-12 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
@@ -84,7 +232,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                 </svg>
               </div>
             </div>
-          </>
+          </div>
         ) : (
           // Image main display
           <>
@@ -152,29 +300,11 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               }}
             >
               {slide.type === 'video' ? (
-                // Video thumbnail that plays on hover
-                <>
-                  <video
-                    src={slide.src}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                    preload="none"
-                    onLoadedMetadata={(e) => {
-                      // Set initial position to middle of video when metadata loads
-                      const video = e.currentTarget;
-                      video.currentTime = video.duration * 0.5;
-                    }}
-                  />
-                  {/* Play Icon Overlay - shown when not hovering */}
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
-                    <div className="bg-white/90 rounded-full p-2">
-                      <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </>
+                // Video thumbnail captured from first 5 seconds
+                <VideoThumbnailComponent
+                  videoUrl={slide.src}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 // Image thumbnail
                 <Image

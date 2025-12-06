@@ -5,16 +5,39 @@ import CarForm from "@/components/CarForm";
 import LoginModal from "@/components/LoginModal";
 import Header from "@/components/Header";
 import CarCard from "@/components/CarCard";
+import ErrorDialog from "@/components/ErrorDialog";
 import { CONTACT, STORE } from "@/lib/constants";
 import { useCars } from "@/hooks/useCars";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export default function Home() {
-  const { cars, loading, fetchCars, deleteCar } = useCars();
+  const { cars, loading, fetchCars, deleteCar, updateCarsOrder } = useCars();
   const { isAuthenticated, login, logout } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingCarId, setEditingCarId] = useState<string | undefined>();
   const [showLogin, setShowLogin] = useState(false);
+  const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: "" });
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [draggedCar, setDraggedCar] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleLoginRequired = useCallback((action: () => void) => {
     if (isAuthenticated) {
@@ -47,8 +70,11 @@ export default function Home() {
       await deleteCar(carId);
       fetchCars();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete car";
-      alert(message);
+      const message = error instanceof Error ? error.message : "មិនអាចលុបរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។";
+      setErrorDialog({ 
+        isOpen: true, 
+        message: message 
+      });
     }
   }, [deleteCar, fetchCars]);
 
@@ -70,6 +96,101 @@ export default function Home() {
 
   const handleLoginCancel = () => {
     setShowLogin(false);
+  };
+
+  // Configure sensors for @dnd-kit with mobile-first approach
+  const sensors = useSensors(
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 8,
+      },
+    }),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Drag and drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
+    setIsDragging(true);
+    
+    // Prevent default touch behavior to avoid conflicts
+    if ('ontouchstart' in window) {
+      document.body.style.touchAction = 'none';
+    }
+    
+    // Find the dragged car for overlay
+    const draggedCarData = cars.find(car => car.id === active.id);
+    setDraggedCar(draggedCarData);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    // Restore touch behavior
+    if ('ontouchstart' in window) {
+      document.body.style.touchAction = '';
+    }
+    
+    setActiveId(null);
+    setDraggedCar(null);
+    setIsDragging(false);
+    
+    if (!over) return;
+    
+    const activeIndex = cars.findIndex(car => car.id === active.id);
+    const overIndex = cars.findIndex(car => car.id === over.id);
+    
+    if (activeIndex !== overIndex) {
+      // Immediately update local state for instant UI feedback
+      const newCars = arrayMove(cars, activeIndex, overIndex);
+      
+      // Update the cars state directly without loading
+      updateCarsOrder(newCars);
+      
+      // Update database in background without showing loading
+      const updateOrderInBackground = async () => {
+        try {
+          const token = localStorage.getItem('admin-token');
+          const response = await fetch('/api/cars/reorder', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              carIds: newCars.map(car => car.id)
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update order');
+          }
+          
+          // Silently update local state to match database response if needed
+          console.log('Order updated successfully in database');
+        } catch (error) {
+          console.error('Error updating car order:', error);
+          setErrorDialog({ 
+            isOpen: true, 
+            message: 'មិនអាចរក្សាទុកលំដាប់ថ្មីបានទេ។ នឹងស្ដារលំដាប់ដើមវិញ។' 
+          });
+          // Restore original order on error without loading
+          fetchCars();
+        }
+      };
+      
+      // Execute background update without awaiting
+      updateOrderInBackground();
+    }
   };
 
   return (
@@ -118,13 +239,59 @@ export default function Home() {
               </button>
             )}
           </div>
+        ) : isAuthenticated ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={cars.map(car => car.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {cars.map((car) => (
+                  <CarCard
+                    key={car.id}
+                    car={car}
+                    isAuthenticated={true}
+                    onEdit={handleEditCar}
+                    onDelete={handleDeleteCar}
+                    isDragging={activeId === car.id}
+                    showDragHandle={true}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+            <DragOverlay
+              style={{
+                cursor: 'grabbing',
+                touchAction: 'none',
+              }}
+            >
+              {activeId && draggedCar ? (
+                <div className="transform rotate-3 scale-105 opacity-95">
+                  <CarCard
+                    car={draggedCar}
+                    isAuthenticated={true}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    isDragging={true}
+                    showDragHandle={true}
+                    isOverlay={true}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {cars.map((car) => (
               <CarCard
                 key={car.id}
                 car={car}
-                isAuthenticated={isAuthenticated}
+                isAuthenticated={false}
                 onEdit={handleEditCar}
                 onDelete={handleDeleteCar}
               />
@@ -142,6 +309,13 @@ export default function Home() {
           <p className="text-gray-400">{STORE.copyright} {STORE.name.full}</p>
         </div>
       </footer>
+      
+      {/* Error Dialog */}
+      <ErrorDialog
+        isOpen={errorDialog.isOpen}
+        onClose={() => setErrorDialog({ isOpen: false, message: "" })}
+        message={errorDialog.message}
+      />
     </div>
   );
 }

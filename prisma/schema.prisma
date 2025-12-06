@@ -22,6 +22,7 @@ model Car {
   color           String?
   papers          String?  // Tax paper, Blue book, etc.
   sold            Boolean  @default(false)
+  displayOrder    Int      @default(0) // For drag and drop ordering
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

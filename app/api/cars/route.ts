@@ -10,7 +10,10 @@ export const maxDuration = 60; // 60 seconds timeout
 export async function GET() {
   try {
     const cars = await prisma.car.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { displayOrder: 'asc' },
+        { createdAt: 'desc' }
+      ],
     });
     
     return NextResponse.json(cars);
@@ -37,14 +40,14 @@ export async function POST(request: NextRequest) {
           error.message?.includes('body size limit') ||
           error.message?.includes('Max body size')) {
         return NextResponse.json(
-          { error: 'Upload too large. Please reduce file sizes. Maximum total size is 80MB.' },
+          { error: 'ផាំងខ្ទប់ធំពេក! សូមកាត់បន្ថយទំហំឯកសារ។ ទំហំអតិបរមា 300MB។' },
           { status: 413 }
         );
       }
       // Re-throw other errors to see what's actually happening
       console.error('Unexpected FormData error:', error);
       return NextResponse.json(
-        { error: `Failed to parse form data: ${error.message}` },
+        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${error.message}` },
         { status: 400 }
       );
     }
@@ -73,9 +76,9 @@ export async function POST(request: NextRequest) {
 
     if (videoFiles.length > 0) {
       for (const file of videoFiles) {
-        if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        if (file.size > 200 * 1024 * 1024) { // 200MB limit
           return NextResponse.json(
-            { error: `Video file ${file.name} is too large. Maximum size is 50MB.` },
+            { error: `វីដេអោ ${file.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
             { status: 400 }
           );
         }
@@ -85,6 +88,13 @@ export async function POST(request: NextRequest) {
         videoUrls.push(videoUrl);
       }
     }
+
+    // Get the next display order (highest current + 1)
+    const maxOrder = await prisma.car.findFirst({
+      select: { displayOrder: true },
+      orderBy: { displayOrder: 'desc' }
+    });
+    const nextOrder = (maxOrder?.displayOrder || 0) + 1;
 
     // Create car in database
     const car = await prisma.car.create({
@@ -102,6 +112,7 @@ export async function POST(request: NextRequest) {
         papers: formData.get('papers') as string || null,
         tiktokUrl: formData.get('tiktokUrl') as string || null,
         sold: formData.get('sold') === 'true',
+        displayOrder: nextOrder,
       },
     });
 
@@ -109,7 +120,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating car:', error);
     return NextResponse.json(
-      { error: 'Failed to create car' },
+      { error: 'មិនអាចបន្ថែមរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។' },
       { status: 500 }
     );
   }

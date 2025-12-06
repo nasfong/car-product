@@ -57,14 +57,14 @@ export async function PUT(
           error.message?.includes('body size limit') ||
           error.message?.includes('Max body size')) {
         return NextResponse.json(
-          { error: 'Upload too large. Please reduce file sizes. Maximum total size is 80MB.' },
+          { error: 'ផាំងខ្ទប់ធំពេក! សូមកាត់បន្ថយទំហំឯកសារ។ ទំហំអតិបរមា 300MB។' },
           { status: 413 }
         );
       }
       // Re-throw other errors to see what's actually happening
       console.error('Unexpected FormData error:', error);
       return NextResponse.json(
-        { error: `Failed to parse form data: ${error.message}` },
+        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${error.message}` },
         { status: 400 }
       );
     }
@@ -150,9 +150,9 @@ export async function PUT(
     if (newVideoFiles.length > 0) {
       for (const file of newVideoFiles) {
         if (file.size > 0 && file.name) {
-          if (file.size > 50 * 1024 * 1024) { // 50MB limit
+          if (file.size > 200 * 1024 * 1024) { // 200MB limit
             return NextResponse.json(
-              { error: `Video file ${file.name} is too large. Maximum size is 50MB.` },
+              { error: `វីដេអោ ${file.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
               { status: 400 }
             );
           }
@@ -215,7 +215,7 @@ export async function PUT(
     // Return more detailed error information
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update car', details: errorMessage },
+      { error: 'មិនអាចកែសំរួលរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។', details: errorMessage },
       { status: 500 }
     );
   }
@@ -281,11 +281,11 @@ export async function DELETE(
       where: { id },
     });
 
-    return NextResponse.json({ message: 'Car deleted successfully' });
+    return NextResponse.json({ message: 'លុបរថយន្តចេញដោយជោគជ័យ។' });
   } catch (error) {
     console.error('Error deleting car:', error);
     return NextResponse.json(
-      { error: 'Failed to delete car' },
+      { error: 'មិនអាចលុបរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។' },
       { status: 500 }
     );
   }

@@ -16,7 +16,7 @@ export default function Header({ isAuthenticated, onAddCar, onLogout, onShowLogi
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="text-[30px] font-bold">{STORE.name.khmer}</h1>
-              <p className="text-blue-100 text-xs mt-0.5">{STORE.name.english}</p>
+              <p className="text-blue-100 text-sm mt-0.5">{STORE.name.english}</p>
             </div>
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
