@@ -90,11 +90,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the next display order (highest current + 1)
-    const maxOrder = await prisma.car.findFirst({
-      select: { displayOrder: true },
-      orderBy: { displayOrder: 'desc' }
-    });
-    const nextOrder = (maxOrder?.displayOrder || 0) + 1;
+    // const maxOrder = await prisma.car.findFirst({
+    //   select: { displayOrder: true },
+    //   orderBy: { displayOrder: 'desc' }
+    // });
+    const nextOrder = 0;
 
     // Create car in database
     const car = await prisma.car.create({

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import Image from 'next/image';
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
+import { Download, Video } from 'yet-another-react-lightbox/plugins';
 
 // Global thumbnail cache to persist thumbnails across component mounts/unmounts
 const thumbnailCache = new Map<string, string>();
@@ -22,14 +23,14 @@ interface VideoThumbnailComponentProps {
   className?: string;
 }
 
-function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponentProps) {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(() => 
+const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponentProps) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(() =>
     // Check cache first
-     thumbnailCache.get(videoUrl) || null
+    thumbnailCache.get(videoUrl) || null
   );
-  const [isLoading, setIsLoading] = useState(() => 
+  const [isLoading, setIsLoading] = useState(() =>
     // If we have cached thumbnail, don't show loading
-     !thumbnailCache.has(videoUrl)
+    !thumbnailCache.has(videoUrl)
   );
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,8 +40,10 @@ function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponen
     // If we already have a cached thumbnail, use it
     const cachedThumbnail = thumbnailCache.get(videoUrl);
     if (cachedThumbnail) {
-      setThumbnailUrl(cachedThumbnail);
-      setIsLoading(false);
+      Promise.resolve().then(() => {
+        setThumbnailUrl(cachedThumbnail);
+        setIsLoading(false);
+      });
       return;
     }
 
@@ -67,10 +70,10 @@ function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponen
           // Set canvas dimensions to match video
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          
+
           // Draw the current video frame
           ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-          
+
           // Convert canvas to blob and create URL
           canvas.toBlob((blob) => {
             if (blob) {
@@ -116,27 +119,29 @@ function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponen
         preload="metadata"
         crossOrigin="anonymous"
       />
-      
+
       {/* Hidden canvas for frame capture */}
       <canvas ref={canvasRef} className="hidden" />
-      
+
       {/* Show loading state or thumbnail */}
       {isLoading ? (
         <div className={`${className} bg-gray-200 flex items-center justify-center`}>
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
         </div>
       ) : thumbnailUrl ? (
         <>
-          <img
+          <Image
             src={thumbnailUrl}
             alt="Video thumbnail"
             className={className}
+            width={100}
+            height={100}
           />
           {/* Play Icon Overlay */}
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
             <div className="bg-white/90 rounded-full p-2">
               <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
+                <path d="M8 5v14l11-7z" />
               </svg>
             </div>
           </div>
@@ -154,7 +159,7 @@ function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponen
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-300">
             <div className="bg-white/90 rounded-full p-2">
               <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
+                <path d="M8 5v14l11-7z" />
               </svg>
             </div>
           </div>
@@ -162,25 +167,32 @@ function VideoThumbnailComponent({ videoUrl, className }: VideoThumbnailComponen
       )}
     </div>
   );
-}
+})
 
 export default function CarImageGallery({ images, videos = [], carName }: CarImageGalleryProps) {
+  const thumbnailsRef = useRef(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Combine images and videos into slides
-  const slides = [
+  const slides = useMemo(() => [
     ...images.map((image) => ({
       src: image,
       alt: carName,
+      downloadUrl: image,
+      download: `${image}?download`,
+      downloadFilename: `${carName}-image`,
       type: 'image'
     })),
     ...videos.map((video) => ({
       src: video,
       alt: `${carName} - Video`,
-      type: 'video'
+      type: 'video',
+      downloadUrl: video,
+      download: `${video}?download`,
+      downloadFilename: `${carName}-video`,
     }))
-  ];
+  ], [images, videos, carName]);
 
   // Handle video auto-play when slide changes
   const handleSlideChange = ({ index }: { index: number }) => {
@@ -284,7 +296,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                   if (video) {
                     // Start from 50% of video duration (e.g., 16s for 33s video)
                     video.currentTime = video.duration * 0.5;
-                    video.play().catch(() => {});
+                    video.play().catch(() => { });
                   }
                 }
               }}
@@ -348,18 +360,30 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
             // For video slides, we'll handle them in the custom render function
             return {
               src: slide.src,
-              alt: `Video ${slides.indexOf(slide) + 1}`,
-              width: 1920,
-              height: 1080
+              // width: 1920,
+              // height: 1080,
+              type: "video",
+              width: 1280,
+              height: 720,
+              poster: '/placeholder-car.jpg',
+              sources: [
+                {
+                  src: slide.src,
+                  type: "video/mp4",
+                },
+              ],
             };
           }
           return {
             src: slide.src,
-            alt: slide.alt
+            alt: slide.alt,
+            download: slide.download,
+            downloadUrl: slide.downloadUrl,
+            downloadFilename: slide.downloadFilename,
           };
         })}
         index={currentIndex}
-        plugins={[Thumbnails, Zoom]}
+        plugins={[Thumbnails, Zoom, Download, Video]}
         thumbnails={{
           position: "bottom",
           width: 120,
@@ -368,6 +392,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           borderRadius: 4,
           padding: 4,
           gap: 16,
+          ref: thumbnailsRef
         }}
         on={{
           view: handleSlideChange,
@@ -407,7 +432,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           },
         }}
         render={{
-          slide: ({ slide }) => {
+          slide: ({ slide }: any) => {
             // Find the corresponding slide in our internal array to check if it's a video
             const slideIndex = slides.findIndex(s => s.src === slide.src);
             const internalSlide = slides[slideIndex];
@@ -439,7 +464,15 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                 </div>
               );
             }
-            return undefined; // Use default rendering for images
+
+            return <Image
+              src={slide.src || '/placeholder-car.jpg'}
+              alt={`${carName} - Main Image`}
+              className="w-full h-full object-contain"
+              width={100}
+              height={100}
+            />;
+
           },
         }}
       />
