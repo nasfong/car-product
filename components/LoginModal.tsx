@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { X, Lock } from "lucide-react";
 
 interface LoginModalProps {
@@ -8,7 +8,7 @@ interface LoginModalProps {
   onCancel: () => void;
 }
 
-export default function LoginModal({ onSuccess, onCancel }: LoginModalProps) {
+function LoginModal({ onSuccess, onCancel }: LoginModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -143,3 +143,5 @@ export default function LoginModal({ onSuccess, onCancel }: LoginModalProps) {
     </div>
   );
 }
+
+export default memo(LoginModal);

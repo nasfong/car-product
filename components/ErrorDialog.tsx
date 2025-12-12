@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 
 interface ErrorDialogProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface ErrorDialogProps {
   message: string;
 }
 
-export default function ErrorDialog({ isOpen, onClose, title = "កំហុស", message }: ErrorDialogProps) {
+function ErrorDialog({ isOpen, onClose, title = "កំហុស", message }: ErrorDialogProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -68,3 +68,5 @@ export default function ErrorDialog({ isOpen, onClose, title = "កំហុស"
     </div>
   );
 }
+
+export default memo(ErrorDialog);

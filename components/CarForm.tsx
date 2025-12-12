@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from 'react';
 import { X } from "lucide-react";
 import ErrorDialog from "./ErrorDialog";
 import {
@@ -18,13 +18,9 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import SortableImage from './SortableImage';
 
 // Static options for select fields
 const TRANSMISSION_OPTIONS = [
@@ -72,7 +68,7 @@ interface CarFormProps {
   onCancel: () => void;
 }
 
-export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
+function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const [loading, setLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -115,7 +111,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       fetch(`/api/cars/${carId}`)
         .then((res) => res.json())
         .then((data) => {
-          console.log('Fetched car data for editing:', data);
           setFormData({
             name: data.name || "",
             price: data.price || "",
@@ -136,96 +131,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     }
   }, [carId]);
 
-  // Sortable Image Component
-  const SortableImage = ({
-    id,
-    image,
-    index,
-    isExisting,
-    onRemove
-  }: {
-    id: string;
-    image: string;
-    index: number;
-    isExisting: boolean;
-    onRemove: () => void;
-  }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="relative group touch-manipulation select-none"
-      >
-        {/* Drag Handle - Top Right Corner */}
-        <div 
-          {...attributes}
-          {...listeners}
-          className="absolute top-1 right-1 z-20 bg-gray-600/80 hover:bg-gray-700 text-white p-2 rounded-full cursor-pointer hover:cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-200"
-          style={{
-            touchAction: 'none',
-            WebkitTouchCallout: 'none',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-          </svg>
-        </div>
-
-        {/* Remove Button - Top Left Corner */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onRemove();
-          }}
-          className="absolute top-1 left-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 touch-manipulation z-20 pointer-events-auto"
-          style={{
-            touchAction: 'manipulation',
-          }}
-        >
-          ×
-        </button>
-
-        {/* Image */}
-        <img
-          src={image}
-          alt={`${isExisting ? 'Existing' : 'New'} ${index + 1}`}
-          className="w-full h-24 object-cover rounded-lg border transition-all duration-200 hover:scale-105 pointer-events-none select-none"
-          draggable={false}
-          style={{
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-          }}
-        />
-        
-        {isDragging && (
-          <div className="absolute inset-0 bg-blue-200 rounded-lg border-2 border-dashed border-blue-400 pointer-events-none" />
-        )}
-      </div>
-    );
-  };
 
   // Prevent background scroll when modal is open
   useEffect(() => {
@@ -255,8 +160,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      console.log('New images selected:', files.map(f => f.name));
-
       // Add to existing files instead of replacing
       setImageFiles(prev => [...prev, ...files]);
 
@@ -285,8 +188,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      console.log('New videos selected:', files.map(f => f.name));
-
       // Validate file sizes (200MB limit per video)
       const maxSize = 200 * 1024 * 1024; // 200MB
       const invalidFiles = files.filter(file => file.size > maxSize);
@@ -322,14 +223,14 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     e.target.value = '';
   };
 
-  const removeImage = (index: number, isExisting: boolean) => {
+  const removeImage = useCallback((index: number, isExisting: boolean) => {
     if (isExisting) {
       setExistingImages(prev => prev.filter((_, i) => i !== index));
     } else {
       setImageFiles(prev => prev.filter((_, i) => i !== index));
       setImagePreviews(prev => prev.filter((_, i) => i !== index));
     }
-  };
+  }, []);
 
   const removeVideo = (index: number, isExisting: boolean) => {
     if (isExisting) {
@@ -418,14 +319,14 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
       // Append new image files
       if (imageFiles.length > 0) {
-        imageFiles.forEach((file, index) => {
+        imageFiles.forEach((file, _) => {
           data.append(`images`, file);
         });
       }
 
       // Append new video files
       if (videoFiles.length > 0) {
-        videoFiles.forEach((file, index) => {
+        videoFiles.forEach((file, _) => {
           data.append(`videos`, file);
         });
       }
@@ -445,13 +346,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       const totalVideoSize = videoFiles.reduce((sum, file) => sum + file.size, 0);
       const totalSize = totalImageSize + totalVideoSize;
 
-      console.log('File size breakdown:');
-      console.log('- Images:', imageFiles.map(f => `${f.name}: ${(f.size / 1024 / 1024).toFixed(2)}MB`));
-      console.log('- Videos:', videoFiles.map(f => `${f.name}: ${(f.size / 1024 / 1024).toFixed(2)}MB`));
-      console.log('- Total image size:', (totalImageSize / 1024 / 1024).toFixed(2), 'MB');
-      console.log('- Total video size:', (totalVideoSize / 1024 / 1024).toFixed(2), 'MB');
-      console.log('- Total upload size:', (totalSize / 1024 / 1024).toFixed(2), 'MB');
-
       // Check if total size exceeds limit (250MB to accommodate 200MB videos)
       if (totalSize > 250 * 1024 * 1024) {
         const totalMB = (totalSize / 1024 / 1024).toFixed(1);
@@ -465,17 +359,6 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
       const url = carId ? `/api/cars/${carId}` : "/api/cars";
       const method = carId ? "PUT" : "POST";
-      console.log('Submitting to:', url, 'with method:', method);
-
-      // Log all FormData entries for debugging
-      console.log('FormData contents:');
-      for (const [key, value] of data.entries()) {
-        if (value instanceof File) {
-          console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
-        } else {
-          console.log(`  ${key}: ${value}`);
-        }
-      }
 
       const token = localStorage.getItem('admin-token');
       const response = await fetch(url, {
@@ -520,7 +403,7 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-[100vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-screen sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div>
@@ -995,8 +878,8 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                   កំពុងរក្សាទុក...
                 </span>
@@ -1015,3 +898,9 @@ export default function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     </div>
   );
 }
+
+export default memo(CarForm, (prev, next) => (
+  prev.carId === next.carId &&
+  prev.onSuccess === next.onSuccess &&
+  prev.onCancel === next.onCancel
+));

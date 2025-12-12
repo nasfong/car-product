@@ -14,26 +14,32 @@ interface CarCardProps {
   isOverlay?: boolean;
 }
 function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, showDragHandle = false, isOverlay = false }: CarCardProps) {
-  // Only use sortable hook when drag functionality is needed
-  const sortableData = showDragHandle && !isOverlay ? useSortable({ id: car.id }) : null;
-  
-  const {
-    attributes = {},
-    listeners = {},
-    setNodeRef = undefined,
-    transform = null,
-    transition = undefined,
-    isDragging: isSortableDragging = false,
-  } = sortableData || {};
+  // Always call useSortable to comply with React Hooks rules
+  const sortable = useSortable({ id: car.id });
 
-  const style = sortableData ? {
-    transform: CSS.Transform.toString(transform),
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
     transition,
-    opacity: isDragging || isSortableDragging ? 0.5 : 1,
-  } : {};
+    isDragging: isSortableDragging,
+  } = sortable;
+
+  const shouldUseSortable = showDragHandle && !isOverlay;
+
+  const style = shouldUseSortable
+    ? {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging || isSortableDragging ? 0.5 : 1,
+      }
+    : {};
 
   // Apply drag props only when needed
-  const dragProps = sortableData && !isOverlay ? { ref: setNodeRef, style } : {};
+  const dragProps = shouldUseSortable
+    ? { ref: setNodeRef, style }
+    : {};
 
   return (
     <div
@@ -42,7 +48,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
       onClick={() => !isDragging && !isSortableDragging && (window.location.href = `/cars/${car.id}`)}
     >
       {/* Drag Handle - Top Right Corner - Only render if needed */}
-      {showDragHandle && !isOverlay && sortableData && (
+      {showDragHandle && !isOverlay && sortable && (
         <div 
           {...attributes}
           {...listeners}
@@ -103,7 +109,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
         <div className="space-y-1 mb-3">
           {car.description && (
             <div className="flex items-start gap-1">
-              <svg className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className="text-xs text-gray-600 line-clamp-2">{car.description}</span>
@@ -111,7 +117,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
           )}
           {car.color && (
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full border border-gray-300 bg-gradient-to-r from-gray-200 to-gray-300"></div>
+              <div className="w-3 h-3 rounded-full border border-gray-300 bg-linear-to-r from-gray-200 to-gray-300" />
               <span className="text-xs text-gray-600">ពណ៌: {car.color}</span>
             </div>
           )}

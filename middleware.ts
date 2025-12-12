@@ -1,26 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Check if the request is for admin operations
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/api/cars') && 
-                      (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE');
+  const pathname = request.nextUrl.pathname;
+  const method = request.method;
   
-  // Allow GET requests (viewing cars) without authentication
-  if (request.method === 'GET') {
-    return NextResponse.next();
-  }
-  
-  if (isAdminRoute) {
-    // Check for admin token in cookies or headers
-    const token = request.cookies.get('admin-token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+  // Check if the request is for car API routes
+  if (pathname.startsWith('/api/cars')) {
+    // Allow GET requests (viewing cars) without authentication
+    // This includes SSR fetches from the server component
+    if (method === 'GET') {
+      return NextResponse.next();
+    }
     
-    // Simple token validation (in production, use JWT or more secure method)
-    if (!token || !isValidAdminToken(token)) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 401 }
-      );
+    // Check for admin operations (POST, PUT, DELETE)
+    const isAdminRoute = method === 'POST' || method === 'PUT' || method === 'DELETE';
+    
+    if (isAdminRoute) {
+      // Check for admin token in cookies or headers
+      const token = request.cookies.get('admin-token')?.value || 
+                    request.headers.get('authorization')?.replace('Bearer ', '');
+      
+      // Validate admin token
+      if (!token || !isValidAdminToken(token)) {
+        return NextResponse.json(
+          { error: 'Unauthorized. Admin access required.' },
+          { status: 401 }
+        );
+      }
     }
   }
   
@@ -29,11 +35,11 @@ export function middleware(request: NextRequest) {
 
 function isValidAdminToken(token: string): boolean {
   // Simple token validation - in production use proper JWT validation
-  // For now, we'll use a simple hash check
   const validTokens = [
     'admin-secret-token-2025', // Simple admin token
+    process.env.ADMIN_SECRET_TOKEN, // Token from environment variable
     // Add more admin tokens here
-  ];
+  ].filter(Boolean); // Remove undefined values
   
   return validTokens.includes(token);
 }

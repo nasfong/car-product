@@ -1,4 +1,5 @@
 import { STORE } from "@/lib/constants";
+import { memo } from "react";
 
 interface HeaderProps {
   isAuthenticated: boolean;
@@ -7,7 +8,7 @@ interface HeaderProps {
   onShowLogin: () => void;
 }
 
-export default function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProps) {
+function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProps) {
   return (
     <header className="bg-linear-to-r from-blue-600 to-blue-800 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 sm:py-6">
@@ -83,3 +84,5 @@ export default function Header({ isAuthenticated, onAddCar, onLogout, onShowLogi
     </header>
   );
 }
+
+export default memo(Header);
