@@ -1,32 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
+import { loginAction, logoutAction } from '@/actions/auth';
+import { AUTH } from '@/lib/constants';
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    // Check if user is authenticated on client mount
-    const token = localStorage.getItem('admin-token');
-    const cookieToken = Cookies.get('admin-token');
-    setIsAuthenticated(!!(token || cookieToken));
-  }, []);
-
-  const login = () => {
-    setIsAuthenticated(true);
+  const login = async () => {
+    await loginAction(AUTH.admin.token);
   };
 
-  const logout = () => {
-    localStorage.removeItem('admin-token');
-    Cookies.remove('admin-token');
-    setIsAuthenticated(false);
+  const logout = async () => {
+    await logoutAction()
   };
 
-  return { 
-    isAuthenticated, 
-    login, 
-    logout,
-    setIsAuthenticated // Export this so it can be set from server state
+  return {
+    login,
+    logout
   };
 }

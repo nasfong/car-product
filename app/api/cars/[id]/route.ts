@@ -24,15 +24,12 @@ export async function GET(
       );
     }
 
-    // Debug log to check videos
-    console.log(`Car ${id} - Videos count:`, car.videos?.length || 0);
-    console.log(`Car ${id} - Videos:`, car.videos);
-
     return NextResponse.json(car);
   } catch (error) {
-    console.error('Error fetching car:', error);
+    const err = error as Error;
+    console.error('Error fetching car:', err.message);
     return NextResponse.json(
-      { error: 'Failed to fetch car' },
+      { error: `Failed to fetch car: ${err.message}` },
       { status: 500 }
     );
   }
@@ -45,40 +42,31 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    
+
     // Parse form data with error handling for large uploads
     let formData: FormData;
     try {
       formData = await request.formData();
-    } catch (error: any) {
-      console.error('FormData parsing error:', error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error('FormData parsing error:', err.message);
       // Only catch specific size-related errors
-      if (error.message?.includes('Request body exceeded') || 
-          error.message?.includes('body size limit') ||
-          error.message?.includes('Max body size')) {
+      if (err.message?.includes('Request body exceeded') ||
+        err.message?.includes('body size limit') ||
+        err.message?.includes('Max body size')) {
         return NextResponse.json(
           { error: 'ផាំងខ្ទប់ធំពេក! សូមកាត់បន្ថយទំហំឯកសារ។ ទំហំអតិបរមា 300MB។' },
           { status: 413 }
         );
       }
       // Re-throw other errors to see what's actually happening
-      console.error('Unexpected FormData error:', error);
+      console.error('Unexpected FormData error:', err.message);
       return NextResponse.json(
-        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${error.message}` },
+        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
         { status: 400 }
       );
     }
-    
-    // Debug: Log all form data
-    console.log('PUT /api/cars/[id] - Received form data:');
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
-      } else {
-        console.log(`  ${key}: ${value}`);
-      }
-    }
-    
+
     // Check if car exists
     const existingCar = await prisma.car.findUnique({
       where: { id },
@@ -93,7 +81,7 @@ export async function PUT(
 
     // Handle image updates
     let finalImages: string[] = [];
-    
+
     // Get existing images from form data
     const existingImagesStr = formData.get('existingImages') as string;
     if (existingImagesStr) {
@@ -125,15 +113,19 @@ export async function PUT(
     for (const removedImg of removedImages) {
       try {
         await deleteImage(removedImg);
-        console.log('Deleted removed image from storage:', removedImg);
       } catch (error) {
+        const err = error as Error;
         console.warn('Failed to delete image:', removedImg, error);
+        return NextResponse.json(
+          { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
+          { status: 400 }
+        );
       }
     }
 
     // Handle video updates
     let finalVideos: string[] = [];
-    
+
     // Get existing videos from form data
     const existingVideosStr = formData.get('existingVideos') as string;
     if (existingVideosStr) {
@@ -169,9 +161,13 @@ export async function PUT(
     for (const removedVid of removedVideos) {
       try {
         await deleteVideo(removedVid);
-        console.log('Deleted removed video from storage:', removedVid);
       } catch (error) {
+        const err = error as Error;
         console.warn('Failed to delete video:', removedVid, error);
+        return NextResponse.json(
+          { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
+          { status: 400 }
+        );
       }
     }
 
@@ -211,7 +207,6 @@ export async function PUT(
     return NextResponse.json(updatedCar);
   } catch (error) {
     console.error('Error updating car:', error);
-    
     // Return more detailed error information
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
@@ -239,41 +234,37 @@ export async function DELETE(
       );
     }
 
-    console.log('Deleting car with images:', car.images);
-    console.log('Deleting car with videos:', car.videos);
-
     // Delete all images from MinIO storage
     if (car.images && car.images.length > 0) {
-      console.log(`Found ${car.images.length} images to delete`);
       for (const image of car.images) {
         try {
-          console.log('Attempting to delete image:', image);
           await deleteImage(image);
-          console.log('Successfully deleted image from storage:', image);
         } catch (error) {
-          console.error('Failed to delete image:', image, error);
+          const err = error as Error;
+          console.error('Failed to delete image:', err.message);
+          NextResponse.json(
+            { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
+            { status: 400 }
+          );
           // Don't throw error here, continue with deletion process
         }
       }
-    } else {
-      console.log('No images to delete');
     }
 
     // Delete all videos from MinIO storage
     if (car.videos && car.videos.length > 0) {
-      console.log(`Found ${car.videos.length} videos to delete`);
       for (const video of car.videos) {
         try {
-          console.log('Attempting to delete video:', video);
           await deleteVideo(video);
-          console.log('Successfully deleted video from storage:', video);
         } catch (error) {
-          console.error('Failed to delete video:', video, error);
-          // Don't throw error here, continue with deletion process
+          const err = error as Error;
+          console.error('Failed to delete video:', err.message);
+          NextResponse.json(
+            { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
+            { status: 400 }
+          );
         }
       }
-    } else {
-      console.log('No videos to delete');
     }
 
     // Delete car from database

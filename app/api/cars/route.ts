@@ -15,12 +15,12 @@ export async function GET() {
         { createdAt: 'desc' }
       ],
     });
-    
+
     return NextResponse.json(cars);
   } catch (error) {
     console.error('Error fetching cars:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch cars' },
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
       { status: 500 }
     );
   }
@@ -33,25 +33,26 @@ export async function POST(request: NextRequest) {
     let formData: FormData;
     try {
       formData = await request.formData();
-    } catch (error: any) {
-      console.error('FormData parsing error:', error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error('FormData parsing error:', err.message);
       // Only catch specific size-related errors
-      if (error.message?.includes('Request body exceeded') || 
-          error.message?.includes('body size limit') ||
-          error.message?.includes('Max body size')) {
+      if (err.message?.includes('Request body exceeded') ||
+        err.message?.includes('body size limit') ||
+        err.message?.includes('Max body size')) {
         return NextResponse.json(
-          { error: 'ផាំងខ្ទប់ធំពេក! សូមកាត់បន្ថយទំហំឯកសារ។ ទំហំអតិបរមា 300MB។' },
+          { error: `ផាំងខ្ទប់ធំពេក! សូមកាត់បន្ថយទំហំឯកសារ។ ទំហំអតិបរមា 300MB។ ${err.message}` },
           { status: 413 }
         );
       }
       // Re-throw other errors to see what's actually happening
       console.error('Unexpected FormData error:', error);
       return NextResponse.json(
-        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${error.message}` },
+        { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
         { status: 400 }
       );
     }
-    
+
     // Get image files
     const imageFiles = formData.getAll('images') as File[];
     const imageUrls: string[] = [];
@@ -89,11 +90,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get the next display order (highest current + 1)
-    // const maxOrder = await prisma.car.findFirst({
-    //   select: { displayOrder: true },
-    //   orderBy: { displayOrder: 'desc' }
-    // });
     const nextOrder = 0;
 
     // Create car in database
@@ -118,9 +114,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(car, { status: 201 });
   } catch (error) {
-    console.error('Error creating car:', error);
+    const err = error as Error;
+    console.error('Error creating car:', err.message);
     return NextResponse.json(
-      { error: 'មិនអាចបន្ថែមរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។' },
+      { error: `មិនអាចបន្ថែមរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។${err.message}` },
       { status: 500 }
     );
   }

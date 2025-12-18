@@ -55,12 +55,12 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50">
-      <Suspense fallback={<CarsLoading />}>
+      {/* <Suspense fallback={<CarsLoading />}> */}
         <HomeClient
           initialCars={cars}
           isAuthenticatedOnServer={isAuthenticatedOnServer}
         />
-      </Suspense>
+      {/* </Suspense> */}
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white mt-16 py-8">

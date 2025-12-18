@@ -32,10 +32,11 @@ interface HomeClientProps {
   isAuthenticatedOnServer: boolean;
 }
 
+
 export default function HomeClient({ initialCars, isAuthenticatedOnServer }: HomeClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { isAuthenticated, login, logout, setIsAuthenticated } = useAuth();
+  const { login, logout } = useAuth();
   const [cars, setCars] = useState(initialCars);
   const [showForm, setShowForm] = useState(false);
   const [editingCarId, setEditingCarId] = useState<string | undefined>();
@@ -45,13 +46,6 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
   const [draggedCar, setDraggedCar] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Sync client auth state with server auth state on mount
-  useEffect(() => {
-    if (isAuthenticatedOnServer && !isAuthenticated) {
-      setIsAuthenticated(true);
-    }
-  }, [isAuthenticatedOnServer, isAuthenticated, setIsAuthenticated]);
-
   const refreshCars = useCallback(() => {
     startTransition(() => {
       router.refresh();
@@ -59,12 +53,12 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
   }, [router]);
 
   const handleLoginRequired = useCallback((action: () => void) => {
-    if (isAuthenticated) {
+    if (isAuthenticatedOnServer) {
       action();
     } else {
       setShowLogin(true);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticatedOnServer]);
 
   const handleAddCar = useCallback(() => {
     handleLoginRequired(() => {
@@ -250,7 +244,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
 
       {/* Header */}
       <Header
-        isAuthenticated={isAuthenticated}
+        isAuthenticated={isAuthenticatedOnServer}
         onAddCar={handleAddCar}
         onLogout={handleLogout}
         onShowLogin={() => setShowLogin(true)}
@@ -266,7 +260,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
         ) : cars.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-600 text-xl">មិនមានរថយន្តនៅឡើយទេ</p>
-            {isAuthenticated && (
+            {isAuthenticatedOnServer && (
               <button
                 onClick={handleAddCar}
                 className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
@@ -275,7 +269,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
               </button>
             )}
           </div>
-        ) : isAuthenticated ? (
+        ) : isAuthenticatedOnServer ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
