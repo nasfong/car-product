@@ -375,7 +375,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         }
         const errorData = await response.json();
         console.error("Server error:", errorData);
-        throw new Error(`Failed to save car: ${errorData.details || errorData.error || response.statusText}`);
+        throw new Error(`${errorData.details || errorData.error || response.statusText}`);
       }
 
       onSuccess();
