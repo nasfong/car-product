@@ -29,3 +29,10 @@ model Car {
 
   @@map("cars")
 }
+
+model VideoJob {
+  id        Int      @id @default(autoincrement())
+  videoKey  String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+}

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { cookies } from "next/headers";
 import HomeClient from "@/components/HomeClient";
 import { CONTACT, STORE } from "@/lib/constants";
