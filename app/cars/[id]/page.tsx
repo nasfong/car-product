@@ -4,42 +4,7 @@ import type { Metadata } from "next";
 import BackButton from "./components/BackButton";
 import ContactButtons from "./components/ContactButtons";
 import CarImageGalleryWrapper from "./components/CarImageGalleryWrapper";
-
-interface Car {
-  id: string;
-  name: string;
-  price: number;
-  transmission: string;
-  fuelType: string;
-  images: string[];
-  videos: string[];
-  tiktokUrl?: string;
-  location: string;
-  description?: string;
-  vehicleType?: string;
-  color?: string;
-  papers?: string;
-  sold: boolean;
-  createdAt: string;
-}
-
-async function getCar(id: string): Promise<Car | null> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/cars/${id}`, {
-      cache: 'no-store',
-    });
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.error("Error fetching car:", error);
-    return null;
-  }
-}
+import { getBaseUrl, getCar } from "./car-service";
 
 export async function generateMetadata({
   params,
@@ -55,13 +20,36 @@ export async function generateMetadata({
     };
   }
 
+  const baseUrl = await getBaseUrl();
+  const ogImageUrl = `${baseUrl}/cars/${id}/opengraph-image`;
+  const canonicalUrl = `${baseUrl}/cars/${id}`;
+  const summary = `${car.name} - ${car.transmission}, ${car.fuelType}, ${car.location}. ${car.description || ''}`.slice(0, 160);
+
   return {
     title: `${car.name} - $${car.price}`,
-    description: `${car.name} - ${car.transmission}, ${car.fuelType}, ${car.location}. ${car.description || ''}`.slice(0, 160),
+    description: summary,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: car.name,
       description: `$${car.price} - ${car.transmission}, ${car.fuelType}`,
-      images: car.images.slice(0, 1),
+      type: 'article',
+      url: canonicalUrl,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: car.name,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: car.name,
+      description: `$${car.price} - ${car.transmission}, ${car.fuelType}`,
+      images: [ogImageUrl],
     },
   };
 }

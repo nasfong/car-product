@@ -465,13 +465,13 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               );
             }
 
-            return <Image
-              src={slide.src || '/placeholder-car.jpg'}
-              alt={`${carName} - Main Image`}
-              className="w-full h-full object-contain"
-              width={100}
-              height={100}
-            />;
+            // return <Image
+            //   src={slide.src || '/placeholder-car.jpg'}
+            //   alt={`${carName} - Main Image`}
+            //   className="w-full h-full object-contain"
+            //   width={100}
+            //   height={100}
+            // />;
 
           },
         }}

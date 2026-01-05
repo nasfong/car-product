@@ -22,6 +22,9 @@ const notoSansKhmer = Noto_Sans_Khmer({
 export const metadata: Metadata = {
   title: STORE.name.full,
   description: STORE.description.full,
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -29,11 +32,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publicUrl = process.env.MINIO_PUBLIC_URL;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://minio-api.nasfong.site" />
-        <link rel="dns-prefetch" href="https://minio-api.nasfong.site" />
+        {/* Favicon */}
+        <link rel="icon" href="/logo.png" type="image/png" />
+        {/* Open Graph meta tags for social sharing */}
+        <meta property="og:title" content={STORE.name.full} />
+        <meta property="og:description" content={STORE.description.full} />
+        <meta property="og:image" content="/logo.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+        <link rel="preconnect" href={publicUrl} />
+        <link rel="dns-prefetch" href={publicUrl} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansKhmer.variable} antialiased`}

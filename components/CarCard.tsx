@@ -24,6 +24,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
     transform,
     transition,
     isDragging: isSortableDragging,
+    isSorting,
   } = sortable;
 
   const shouldUseSortable = showDragHandle && !isOverlay;
@@ -44,8 +45,13 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
   return (
     <div
       {...dragProps}
-      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group relative ${isDragging || isSortableDragging ? 'shadow-2xl scale-105' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
-      onClick={() => !isDragging && !isSortableDragging && (window.location.href = `/cars/${car.id}`)}
+      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group relative touch-manipulation ${isDragging || isSortableDragging ? 'shadow-xl ring-2 ring-blue-200' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
+      onClick={() => {
+        if (isDragging || isSortableDragging || isSorting) {
+          return;
+        }
+        window.location.href = `/cars/${car.id}`;
+      }}
     >
       {/* Drag Handle - Top Right Corner - Only render if needed */}
       {showDragHandle && !isOverlay && sortable && (

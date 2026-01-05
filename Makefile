@@ -1,6 +1,6 @@
 # Docker configuration
 IMAGE_NAME = nasfong/car-product
-TAG ?= testing
+TAG ?= latest
 PLATFORM ?= linux/amd64,linux/arm64
 
 # Build the Docker image

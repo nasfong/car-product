@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import CarForm from "@/components/CarForm";
 import LoginModal from "@/components/LoginModal";
@@ -19,6 +19,7 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragCancelEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -45,6 +46,38 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draggedCar, setDraggedCar] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const bodyTouchActionRef = useRef<string | null>(null);
+
+  const disableBodyTouchInteractions = useCallback(() => {
+    if (typeof window === "undefined" || typeof document === "undefined" || !('ontouchstart' in window) || !document.body) {
+      return;
+    }
+
+    if (bodyTouchActionRef.current === null) {
+      bodyTouchActionRef.current = document.body.style.touchAction || "";
+    }
+
+    document.body.style.touchAction = "none";
+  }, []);
+
+  const restoreBodyTouchInteractions = useCallback(() => {
+    if (typeof window === "undefined" || typeof document === "undefined" || !('ontouchstart' in window) || !document.body) {
+      return;
+    }
+
+    if (bodyTouchActionRef.current !== null) {
+      document.body.style.touchAction = bodyTouchActionRef.current;
+      bodyTouchActionRef.current = null;
+    } else {
+      document.body.style.touchAction = "auto";
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      restoreBodyTouchInteractions();
+    };
+  }, [restoreBodyTouchInteractions]);
 
   const refreshCars = useCallback(() => {
     startTransition(() => {
@@ -155,73 +188,76 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
     setIsDragging(true);
 
     // Prevent default touch behavior to avoid conflicts
-    if ('ontouchstart' in window) {
-      document.body.style.touchAction = 'none';
-    }
+    disableBodyTouchInteractions();
 
     // Find the dragged car for overlay
     const draggedCarData = cars.find(car => car.id === active.id);
     setDraggedCar(draggedCarData);
-  }, [cars]);
+  }, [cars, disableBodyTouchInteractions]);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const syncCarOrder = useCallback(async (newOrder: any[], previousOrder: any[]) => {
+    try {
+      const token = localStorage.getItem('admin-token');
+      const response = await fetch('/api/cars/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          carIds: newOrder.map(car => car.id)
+        })
+      });
 
-    // Restore touch behavior
-    if ('ontouchstart' in window) {
-      document.body.style.touchAction = '';
+      if (!response.ok) {
+        throw new Error('Failed to update order');
+      }
+
+      // Refresh to sync with server in background
+      refreshCars();
+    } catch (error) {
+      console.error('Error updating car order:', error);
+      setErrorDialog({
+        isOpen: true,
+        message: 'មិនអាចរក្សាទុកលំដាប់ថ្មីបានទេ។ នឹងស្ដារលំដាប់ដើមវិញ។'
+      });
+      setCars(previousOrder);
     }
+  }, [refreshCars, setCars, setErrorDialog]);
 
+  const finalizeDrag = useCallback(() => {
+    restoreBodyTouchInteractions();
     setActiveId(null);
     setDraggedCar(null);
     setIsDragging(false);
+  }, [restoreBodyTouchInteractions]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    finalizeDrag();
 
     if (!over) return;
 
-    const activeIndex = cars.findIndex(car => car.id === active.id);
-    const overIndex = cars.findIndex(car => car.id === over.id);
+    const previousOrder = [...cars];
+    const activeIndex = previousOrder.findIndex(car => car.id === active.id);
+    const overIndex = previousOrder.findIndex(car => car.id === over.id);
 
     if (activeIndex !== overIndex) {
       // Immediately update local state for instant UI feedback
-      const newCars = arrayMove(cars, activeIndex, overIndex);
-      setCars(newCars);
+      const newOrder = arrayMove(previousOrder, activeIndex, overIndex);
+      setCars(newOrder);
 
-      // Update database in background without showing loading
-      const updateOrderInBackground = async () => {
-        try {
-          const token = localStorage.getItem('admin-token');
-          const response = await fetch('/api/cars/reorder', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              carIds: newCars.map(car => car.id)
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to update order');
-          }
-
-          // Refresh to sync with server
-          refreshCars();
-        } catch (error) {
-          console.error('Error updating car order:', error);
-          setErrorDialog({
-            isOpen: true,
-            message: 'មិនអាចរក្សាទុកលំដាប់ថ្មីបានទេ។ នឹងស្ដារលំដាប់ដើមវិញ។'
-          });
-          // Restore original order on error
-          setCars(initialCars);
-        }
-      };
-
-      // Execute background update without awaiting
-      updateOrderInBackground();
+      // Update database in background without blocking UI
+      syncCarOrder(newOrder, previousOrder);
     }
-  }, [cars, initialCars, refreshCars]);
+  }, [cars, finalizeDrag, syncCarOrder]);
+
+  const handleDragCancel = useCallback((event: DragCancelEvent) => {
+    if (event.active) {
+      finalizeDrag();
+    }
+  }, [finalizeDrag]);
 
   return (
     <>
@@ -251,7 +287,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-4">
         {isPending ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
@@ -275,6 +311,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
             <SortableContext
               items={cars.map(car => car.id)}
@@ -301,17 +338,15 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
               }}
             >
               {activeId && draggedCar ? (
-                <div className="transform rotate-3 scale-105 opacity-95">
-                  <CarCard
-                    car={draggedCar}
-                    isAuthenticated={true}
-                    onEdit={() => { }}
-                    onDelete={() => { }}
-                    isDragging={true}
-                    showDragHandle={true}
-                    isOverlay={true}
-                  />
-                </div>
+                <CarCard
+                  car={draggedCar}
+                  isAuthenticated={true}
+                  onEdit={() => { }}
+                  onDelete={() => { }}
+                  isDragging={true}
+                  showDragHandle={true}
+                  isOverlay={true}
+                />
               ) : null}
             </DragOverlay>
           </DndContext>
