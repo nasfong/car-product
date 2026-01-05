@@ -3,6 +3,9 @@ IMAGE_NAME = nasfong/car-product
 TAG ?= latest
 PLATFORM ?= linux/amd64,linux/arm64
 
+stats:
+	docker stats car-product
+
 # Build the Docker image
 build:
 	docker build -t $(IMAGE_NAME):$(TAG) .
