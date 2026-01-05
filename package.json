@@ -24,6 +24,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "sharp": "^0.34.5",
+    "swiper": "^12.0.3",
     "yet-another-react-lightbox": "^3.25.0",
     "zod": "^4.1.13"
   },

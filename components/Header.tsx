@@ -42,11 +42,12 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
               onTouchStart={handleLogoTouch}
             >
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Store Logo"
                 width={90}
                 height={90}
                 className="rounded-xl object-cover"
+                priority
               />
               <div className="leading-tight">
                 <h1 className="text-[30px] font-bold">{STORE.name.khmer}</h1>

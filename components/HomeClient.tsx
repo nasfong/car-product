@@ -29,16 +29,15 @@ import {
 } from "@dnd-kit/sortable";
 
 interface HomeClientProps {
-  initialCars: any[];
   isAuthenticatedOnServer: boolean;
 }
 
-
-export default function HomeClient({ initialCars, isAuthenticatedOnServer }: HomeClientProps) {
+export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { login, logout } = useAuth();
-  const [cars, setCars] = useState(initialCars);
+  const [cars, setCars] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCarId, setEditingCarId] = useState<string | undefined>();
   const [showLogin, setShowLogin] = useState(false);
@@ -47,6 +46,34 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
   const [draggedCar, setDraggedCar] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
   const bodyTouchActionRef = useRef<string | null>(null);
+
+  // Fetch cars on client side
+  useEffect(() => {
+    async function fetchCars() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/cars');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch cars');
+        }
+
+        const data = await response.json();
+        setCars(data || []);
+      } catch (err) {
+        console.error('Error fetching cars:', err);
+        setErrorDialog({
+          isOpen: true,
+          message: "មិនអាចទាញយករថយន្តបានទេ។ សូមព្យាយាមម្តងទៀត។"
+        });
+        setCars([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCars();
+  }, []);
 
   const disableBodyTouchInteractions = useCallback(() => {
     if (typeof window === "undefined" || typeof document === "undefined" || !('ontouchstart' in window) || !document.body) {
@@ -79,11 +106,17 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
     };
   }, [restoreBodyTouchInteractions]);
 
-  const refreshCars = useCallback(() => {
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+  const refreshCars = useCallback(async () => {
+    try {
+      const response = await fetch('/api/cars');
+      if (response.ok) {
+        const data = await response.json();
+        setCars(data || []);
+      }
+    } catch (err) {
+      console.error('Error refreshing cars:', err);
+    }
+  }, []);
 
   const handleLoginRequired = useCallback((action: () => void) => {
     if (isAuthenticatedOnServer) {
@@ -150,8 +183,8 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
     login();
     setShowLogin(false);
     // Refresh to get server-side auth state
-    refreshCars();
-  }, [login, refreshCars]);
+    router.refresh();
+  }, [login, router]);
 
   const handleLoginCancel = useCallback(() => {
     setShowLogin(false);
@@ -160,8 +193,8 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
   const handleLogout = useCallback(() => {
     logout();
     // Refresh to update server-side rendering
-    refreshCars();
-  }, [logout, refreshCars]);
+    router.refresh();
+  }, [logout, router]);
 
   // Configure sensors for @dnd-kit with mobile-first approach
   const sensors = useSensors(
@@ -223,7 +256,7 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
       });
       setCars(previousOrder);
     }
-  }, [refreshCars, setCars, setErrorDialog]);
+  }, [refreshCars]);
 
   const finalizeDrag = useCallback(() => {
     restoreBodyTouchInteractions();
@@ -293,76 +326,80 @@ export default function HomeClient({ initialCars, isAuthenticatedOnServer }: Hom
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
             <p className="mt-4 text-gray-600">កំពុងផ្ទុក...</p>
           </div>
-        ) : cars.length === 0 ? (
+        ) : loading ?
           <div className="text-center py-20">
-            <p className="text-gray-600 text-xl">មិនមានរថយន្តនៅឡើយទេ</p>
-            {isAuthenticatedOnServer && (
-              <button
-                onClick={handleAddCar}
-                className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
+            <p className="mt-4 text-gray-600">កំពុងផ្ទុក...</p>
+          </div> : cars.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-600 text-xl">មិនមានរថយន្តនៅឡើយទេ</p>
+              {isAuthenticatedOnServer && (
+                <button
+                  onClick={handleAddCar}
+                  className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  បន្ថែមរថយន្តដំបូង
+                </button>
+              )}
+            </div>
+          ) : isAuthenticatedOnServer ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <SortableContext
+                items={cars.map(car => car.id)}
+                strategy={rectSortingStrategy}
               >
-                បន្ថែមរថយន្តដំបូង
-              </button>
-            )}
-          </div>
-        ) : isAuthenticatedOnServer ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <SortableContext
-              items={cars.map(car => car.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {cars.map((car) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {cars.map((car) => (
+                    <CarCard
+                      key={car.id}
+                      car={car}
+                      isAuthenticated={true}
+                      onEdit={handleEditCar}
+                      onDelete={handleDeleteCar}
+                      isDragging={activeId === car.id}
+                      showDragHandle={true}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+              <DragOverlay
+                style={{
+                  cursor: 'grabbing',
+                  touchAction: 'none',
+                }}
+              >
+                {activeId && draggedCar ? (
                   <CarCard
-                    key={car.id}
-                    car={car}
+                    car={draggedCar}
                     isAuthenticated={true}
-                    onEdit={handleEditCar}
-                    onDelete={handleDeleteCar}
-                    isDragging={activeId === car.id}
+                    onEdit={() => { }}
+                    onDelete={() => { }}
+                    isDragging={true}
                     showDragHandle={true}
+                    isOverlay={true}
                   />
-                ))}
-              </div>
-            </SortableContext>
-            <DragOverlay
-              style={{
-                cursor: 'grabbing',
-                touchAction: 'none',
-              }}
-            >
-              {activeId && draggedCar ? (
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {cars.map((car) => (
                 <CarCard
-                  car={draggedCar}
-                  isAuthenticated={true}
-                  onEdit={() => { }}
-                  onDelete={() => { }}
-                  isDragging={true}
-                  showDragHandle={true}
-                  isOverlay={true}
+                  key={car.id}
+                  car={car}
+                  isAuthenticated={false}
+                  onEdit={handleEditCar}
+                  onDelete={handleDeleteCar}
                 />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {cars.map((car) => (
-              <CarCard
-                key={car.id}
-                car={car}
-                isAuthenticated={false}
-                onEdit={handleEditCar}
-                onDelete={handleDeleteCar}
-              />
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
       </main>
 
       {/* Error Dialog */}

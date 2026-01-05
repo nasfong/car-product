@@ -1,27 +1,7 @@
 import { cookies } from "next/headers";
 import HomeClient from "@/components/HomeClient";
 import { CONTACT, STORE } from "@/lib/constants";
-
-// Server Component - fetches cars data
-async function getCars() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/cars`, {
-      cache: 'no-store', // Always fetch fresh data
-      next: { revalidate: 0 }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch cars');
-    }
-
-    const data = await response.json();
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching cars:', error);
-    return [];
-  }
-}
+import { Suspense } from "react";
 
 // Check if user is authenticated on server
 async function checkAuthentication() {
@@ -49,17 +29,15 @@ function CarsLoading() {
 
 // Server Component
 export default async function Home() {
-  const cars = await getCars();
   const isAuthenticatedOnServer = await checkAuthentication();
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50">
-      {/* <Suspense fallback={<CarsLoading />}> */}
+      <Suspense fallback={<CarsLoading />}>
         <HomeClient
-          initialCars={cars}
           isAuthenticatedOnServer={isAuthenticatedOnServer}
         />
-      {/* </Suspense> */}
+      </Suspense>
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white mt-16 py-8">
