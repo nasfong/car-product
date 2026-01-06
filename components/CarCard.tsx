@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import { Car } from "@/lib/types";
-import { memo, useState, useCallback, useRef } from "react";
+import { memo, useState, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -15,24 +16,22 @@ interface CarCardProps {
 }
 function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, showDragHandle = false, isOverlay = false }: CarCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Throttled scroll handler to prevent excessive re-renders
+  const [maxImageIndex, setMaxImageIndex] = useState(0);
+
+  // Scroll handler to update current image index
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const itemWidth = e.currentTarget.offsetWidth;
+    const newIndex = Math.round(scrollLeft / itemWidth);
+
+    // Only update if index changed
+    if (newIndex !== currentImageIndex && newIndex >= 0 && newIndex < car.images.length) {
+      setCurrentImageIndex(newIndex);
+      // Track the maximum index reached
+      setMaxImageIndex(prev => Math.max(prev, newIndex));
     }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
-      const scrollLeft = e.currentTarget.scrollLeft;
-      const itemWidth = e.currentTarget.offsetWidth;
-      const newIndex = Math.round(scrollLeft / itemWidth);
-      
-      // Only update if index changed
-      setCurrentImageIndex(prev => prev !== newIndex ? newIndex : prev);
-    }, 100);
-  }, []);
-  
+  }, [currentImageIndex, car.images.length]);
+
   // Always call useSortable to comply with React Hooks rules
   const sortable = useSortable({ id: car.id });
 
@@ -50,10 +49,10 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
 
   const style = shouldUseSortable
     ? {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging || isSortableDragging ? 0.5 : 1,
-      }
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging || isSortableDragging ? 0.5 : 1,
+    }
     : {};
 
   // Apply drag props only when needed
@@ -74,7 +73,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
     >
       {/* Drag Handle - Top Right Corner - Only render if needed */}
       {showDragHandle && !isOverlay && sortable && (
-        <div 
+        <div
           {...attributes}
           {...listeners}
           className="absolute top-2 right-2 z-20 bg-gray-600/80 hover:bg-gray-700 text-white p-3 rounded-full cursor-pointer hover:cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-200"
@@ -107,44 +106,51 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
       {/* Car Image - Swipeable Gallery */}
       <div className="relative aspect-4/3 bg-gray-200">
         {/* Scrollable Image Container */}
-        <div 
+        <div
           className="w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide flex"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           onScroll={handleScroll}
         >
-          {car.images.map((image, index) => (
-            <div key={index} className="w-full h-full shrink-0 snap-center relative">
-              <Image
-                src={image}
-                alt={`${car.name} - Image ${index + 1}`}
-                fill
-                className="object-cover"
-                priority={index === 0}
-                loading={index === 0 ? undefined : "lazy"}
-              />
-            </div>
-          ))}
+          {car.images.map((image, index) => {
+            // Render images up to the maximum index reached (keeps downloaded images)
+            const shouldRender = index <= maxImageIndex + 1; // +1 to preload next image
+
+            return (
+              <div key={index} className="w-full h-full shrink-0 snap-center relative">
+                {shouldRender ? (
+                  <img
+                    src={image}
+                    alt={`${car.name} - Image ${index + 1}`}
+                    className="object-cover pointer-events-none w-full h-full"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300" />
+                )}
+              </div>
+            );
+          })}
         </div>
-        
+
         {/* Pagination Dots */}
         {car.images.length > 1 && (
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10">
             {car.images.map((_, index) => (
               <div
                 key={index}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  index === currentImageIndex
-                    ? 'bg-white w-4'
-                    : 'bg-white/60'
-                }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentImageIndex
+                  ? 'bg-white w-4'
+                  : 'bg-white/60'
+                  }`}
               />
             ))}
           </div>
         )}
-        
+
         {/* Image Count Badge */}
         {car.images.length > 1 && (
-          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1 z-10">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
             </svg>

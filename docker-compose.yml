@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   nextjs:
+    # image: nasfong/car-product:latest
     build:
       context: .
       dockerfile: Dockerfile.dev

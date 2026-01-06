@@ -6,6 +6,10 @@ import { saveImage, saveVideo } from '@/lib/storage';
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds timeout
 
+// Disable body size limit for this route
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 // GET /api/cars - List all cars
 export async function GET() {
   try {

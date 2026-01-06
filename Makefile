@@ -18,6 +18,9 @@ build-multi:
 run:
 	docker run -p 3000:3000 $(IMAGE_NAME):$(TAG)
 
+run-prod:
+	docker compose -f docker/docker-compose-prod.yml up
+
 # Build and run
 build-run: build run
 

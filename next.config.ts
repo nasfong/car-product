@@ -5,9 +5,9 @@ const nextConfig: NextConfig = {
   
   experimental: {
     serverActions: {
-      bodySizeLimit: '300mb'
+      bodySizeLimit: '100gb'
     },
-    // Remove proxyClientMaxBodySize - not a valid Next.js config
+    middlewareClientMaxBodySize: '100gb',
   },
   
   serverExternalPackages: ['@prisma/client'],

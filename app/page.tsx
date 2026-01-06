@@ -27,34 +27,15 @@ function CarsLoading() {
   );
 }
 
-// Fetch cars on server side
-async function getCars() {
-  try {
-    const { prisma } = await import('@/lib/prisma');
-    const cars = await prisma.car.findMany({
-      orderBy: [
-        { displayOrder: 'asc' },
-        { createdAt: 'desc' }
-      ],
-    });
-    return cars;
-  } catch (error) {
-    console.error('Error fetching cars:', error);
-    return [];
-  }
-}
-
 // Server Component
 export default async function Home() {
   const isAuthenticatedOnServer = await checkAuthentication();
-  const initialCars = await getCars();
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50">
       <Suspense fallback={<CarsLoading />}>
         <HomeClient
           isAuthenticatedOnServer={isAuthenticatedOnServer}
-          initialCars={initialCars}
         />
       </Suspense>
 

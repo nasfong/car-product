@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  nextjs:
+    image: nasfong/car-product:latest
+    container_name: car-product-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
