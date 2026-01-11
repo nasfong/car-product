@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NextTopLoader from 'nextjs-toploader';
 import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
 import "./globals.css";
 import { STORE } from "@/lib/constants";
@@ -37,8 +38,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Favicon */}
-        <link rel="icon" href="/logo.png" type="image/png" />
         {/* Open Graph meta tags for social sharing */}
         <meta property="og:title" content={STORE.name.full} />
         <meta property="og:description" content={STORE.description.full} />
@@ -52,6 +51,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansKhmer.variable} antialiased`}
         suppressHydrationWarning
       >
+        <NextTopLoader />
         {children}
       </body>
     </html>

@@ -130,7 +130,7 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
         </div>
       ) : thumbnailUrl ? (
         <>
-          <Image
+          <img
             src={thumbnailUrl}
             alt="Video thumbnail"
             className={className}
@@ -248,14 +248,11 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
         ) : (
           // Image main display
           <>
-            <Image
+            <img
               src={slides[0]?.src || '/placeholder-car.jpg'}
               alt={`${carName} - Main Image`}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
-              quality={80}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
             />
             {/* Zoom Icon Overlay for Image */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
@@ -319,13 +316,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                 />
               ) : (
                 // Image thumbnail
-                <Image
+                <img
                   src={slide.src}
                   alt={`${carName} - Thumbnail ${index + 2}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 80px, 120px"
-                  quality={70}
+                  className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
                 />
               )}
