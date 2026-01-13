@@ -30,7 +30,7 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
   }, [handleLogoDoubleClick]);
 
   return (
-    <header className="bg-linear-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+    <header className="bg-gradient-to-r from-blue-700 to-teal-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4 sm:py-6">
         {/* Mobile Layout - Stacked */}
         <div className="">
@@ -49,9 +49,10 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
                 className="rounded-xl object-cover"
                 priority
               />
-              <div className="leading-tight">
-                <h1 className="text-[30px] font-bold">{STORE.name.khmer}</h1>
-                <p className="text-blue-100 text-[20px] font-bold">{STORE.name.english}</p>
+              <div className="leading-tight space-y-1">
+                <h1 className="text-[32px] font-bold tracking-tight">{STORE.name.khmer}</h1>
+                <p className="text-blue-200 text-[18px] font-semibold tracking-wide">{STORE.name.english}</p>
+                <p className="text-blue-100/80 text-[14px] font-medium">{STORE.name.description}</p>
               </div>
 
             </div>

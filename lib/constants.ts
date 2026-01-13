@@ -30,6 +30,7 @@ export const STORE = {
     khmer: "សាតូ លក់ឡាន",
     english: "Zato Car Showroom",
     full: "ហាងលក់រថយន្ត - Zato Car Showroom",
+    description: "ទទួលទិញ លក់ និង បង់រលស់រថយន្ត"
   },
   logo: "🚗", // You can replace this with an image path like "/logo.png"
   description: {

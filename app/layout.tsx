@@ -3,6 +3,7 @@ import NextTopLoader from 'nextjs-toploader';
 import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
 import "./globals.css";
 import { STORE } from "@/lib/constants";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <NextTopLoader />
+        <GoogleAnalytics />
         {children}
       </body>
     </html>

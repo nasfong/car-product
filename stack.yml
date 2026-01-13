@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   car-product:
-    image: nasfong/car-product:testing
+    image: nasfong/car-product:latest
     container_name: car-product
     networks:
       traefik: {}   # for public HTTP routing via Traefik
@@ -10,22 +10,24 @@ services:
       NODE_ENV: production
       # PostgreSQL - using internal alias
       DATABASE_URL: postgres://postgres:your_postgres_password@alias-postgres:5432/postgres?sslmode=disable
-      # MinIO Configuration - using internal alias for upload
+      # MinIO Configuration - using internal alias
       MINIO_ENDPOINT: alias-minio-api
       MINIO_PORT: 9000
       MINIO_USE_SSL: false
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: Rening007minio
       MINIO_BUCKET_NAME: car-images
-      # MinIO Public URL - for database storage and public access
-      MINIO_PUBLIC_URL: https://minio-api.nasfong.site
+
+      # Public URL for database storage (what users will download)
+      MINIO_PUBLIC_URL: https://cdn.nasfong.site
+      
       # Analytic
-      # NEXT_PUBLIC_GA_MEASUREMENT_ID: G-VTVSE157MQ
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: G-VTVSE157MQ
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: 1024M
+          cpus: "2"
+          memory: 2048M
         reservations:
           cpus: "0.25"
           memory: 256M
