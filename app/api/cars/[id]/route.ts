@@ -196,25 +196,34 @@ export async function PUT(
     const papers = formData.get('papers') as string;
     const tiktokUrl = formData.get('tiktokUrl') as string;
     const status = parseInt(formData.get('status') as string) || 1;
+    const createdAtStr = formData.get('createdAt') as string;
+    const createdAtDate = createdAtStr ? new Date(createdAtStr) : undefined;
 
     // Update car in database
+    const updateData: any = {
+      name,
+      price,
+      transmission,
+      fuelType,
+      images: finalImages,
+      videos: finalVideos,
+      location: location || existingCar.location,
+      description: description || null,
+      vehicleType: vehicleType || existingCar.vehicleType,
+      color: color || null,
+      papers: papers || null,
+      tiktokUrl: tiktokUrl || null,
+      status,
+    };
+    
+    // Only update createdAt if provided
+    if (createdAtDate) {
+      updateData.createdAt = createdAtDate;
+    }
+
     const updatedCar = await prisma.car.update({
       where: { id },
-      data: {
-        name,
-        price,
-        transmission,
-        fuelType,
-        images: finalImages,
-        videos: finalVideos,
-        location: location || existingCar.location,
-        description: description || null,
-        vehicleType: vehicleType || existingCar.vehicleType,
-        color: color || null,
-        papers: papers || null,
-        tiktokUrl: tiktokUrl || null,
-        status,
-      },
+      data: updateData,
     });
 
     // Invalidate caches after updating

@@ -49,6 +49,11 @@ const VEHICLE_TYPE_OPTIONS = [
   "Minivan",
 ];
 
+const PAPERS_OPTIONS = [
+  "ស្លាកលេខ",
+  "ក្រដាស់ពន្ធ",
+];
+
 interface CarFormData {
   name: string;
   price: string;
@@ -61,6 +66,7 @@ interface CarFormData {
   papers: string;
   tiktokUrl: string;
   status: number;
+  createdAt: string;
 }
 
 interface CarFormProps {
@@ -92,6 +98,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     papers: "",
     tiktokUrl: "",
     status: 1,
+    createdAt: new Date().toISOString().slice(0, 10),
   });
 
   // Configure sensors for @dnd-kit with immediate click activation
@@ -124,6 +131,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             papers: data.papers || "",
             tiktokUrl: data.tiktokUrl || "",
             status: data.status || 1,
+            createdAt: data.createdAt ? new Date(data.createdAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
           });
           setExistingImages(data.images || []);
           setExistingVideos(data.videos || []);
@@ -137,20 +145,41 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   useEffect(() => {
     // Save current overflow style
     const originalStyle = window.getComputedStyle(document.body).overflow;
+    const originalPosition = window.getComputedStyle(document.body).position;
 
-    // Prevent background scroll
+    // Prevent background scroll on all devices
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    
+    // Add iOS-specific viewport fix
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    const originalViewportContent = viewportMeta?.getAttribute('content');
 
-    // Cleanup function to restore original overflow when component unmounts
+    // Cleanup function to restore original styles when component unmounts
     return () => {
       document.body.style.overflow = originalStyle;
+      document.body.style.position = originalPosition;
+      document.body.style.width = 'auto';
+      if (originalViewportContent) {
+        viewportMeta?.setAttribute('content', originalViewportContent);
+      }
     };
   }, []);
 
-  // Handle keyboard submission
+  // Handle keyboard submission with iOS Safari support
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      // Force blur to close keyboard on iOS Safari
+      const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+      setTimeout(() => {
+        target.blur();
+        // Force document scroll to ensure keyboard closes
+        if (typeof window !== 'undefined') {
+          document.body.scrollTop = document.body.scrollTop;
+        }
+      }, 0);
       const form = e.currentTarget.closest('form');
       if (form) {
         form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
@@ -294,6 +323,24 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Force blur all inputs to close keyboard on mobile/iOS Safari
+    const form = e.currentTarget as HTMLFormElement;
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    // Use setTimeout to ensure blur is processed after event
+    setTimeout(() => {
+      inputs.forEach(input => {
+        (input as HTMLInputElement).blur();
+      });
+      // Force document scroll to trigger keyboard close on iOS
+      if (typeof window !== 'undefined') {
+        document.body.scrollTop = document.body.scrollTop;
+        // For iOS Safari, also try scrolling to top
+        window.scrollTo(0, 0);
+      }
+    }, 50);
+    
     setLoading(true);
 
     try {
@@ -400,8 +447,12 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-screen sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200" style={{ WebkitUserSelect: 'none' }}>
+      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-screen sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" style={{ 
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTextSizeAdjust: 'none',
+      }}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div>
@@ -422,7 +473,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1" style={{ WebkitTouchCallout: 'none' }}>
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Image Upload */}
             <div className="space-y-3">
@@ -640,7 +691,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation transition-all"
                 placeholder="តូយ៉ូតា ខេមរី"
                 enterKeyHint="next"
               />
@@ -781,10 +832,16 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 value={formData.papers}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
+                list="papers-options"
                 className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-                placeholder="Tax paper, Blue book, Registration..."
+                placeholder="Select or type..."
                 enterKeyHint="next"
               />
+              <datalist id="papers-options">
+                {PAPERS_OPTIONS.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
             </div>
 
             {/* TikTok URL Field */}
@@ -816,11 +873,30 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                onKeyDown={handleKeyDown}
                 rows={4}
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation resize-none"
+                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation resize-none transition-all"
                 placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
-                enterKeyHint="done"
+                onBlur={(e) => {
+                  // Ensure keyboard closes on blur
+                  if (typeof window !== 'undefined') {
+                    window.scrollTo(0, 0);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Created At Field */}
+            <div>
+              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+                ថ្ងៃបង្កើត <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="createdAt"
+                value={formData.createdAt}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none touch-manipulation cursor-pointer transition-all hover:border-gray-400 bg-white"
               />
             </div>
 

@@ -109,6 +109,9 @@ export async function POST(request: NextRequest) {
     const nextOrder = 0;
 
     // Create car in database
+    const createdAtStr = formData.get('createdAt') as string;
+    const createdAtDate = createdAtStr ? new Date(createdAtStr) : new Date();
+    
     const car = await prisma.car.create({
       data: {
         name: formData.get('name') as string,
@@ -125,6 +128,7 @@ export async function POST(request: NextRequest) {
         tiktokUrl: formData.get('tiktokUrl') as string || null,
         status: parseInt(formData.get('status') as string) || 1,
         displayOrder: nextOrder,
+        createdAt: createdAtDate,
       },
     });
 

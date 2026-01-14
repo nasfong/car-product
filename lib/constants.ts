@@ -30,7 +30,7 @@ export const STORE = {
     khmer: "សាតូ លក់ឡាន",
     english: "Zato Car Showroom",
     full: "ហាងលក់រថយន្ត - Zato Car Showroom",
-    description: "ទទួលទិញ លក់ និង បង់រលស់រថយន្ត"
+    description: "ទទួលទិញ លក់ និង បង់រំលស់រថយន្ត"
   },
   logo: "🚗", // You can replace this with an image path like "/logo.png"
   description: {
@@ -38,7 +38,7 @@ export const STORE = {
     english: "Premium cars at reasonable prices",
     full: "រថយន្តគុណភាពខ្ពស់ តម្លៃសមរម្យ - Premium cars at reasonable prices",
   },
-  copyright: "© 2025",
+  copyright: "© 2026",
 } as const;
 
 // Car Status - Maps numbers to Khmer labels
