@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         color: formData.get('color') as string || null,
         papers: formData.get('papers') as string || null,
         tiktokUrl: formData.get('tiktokUrl') as string || null,
-        sold: formData.get('sold') === 'true',
+        status: parseInt(formData.get('status') as string) || 1,
         displayOrder: nextOrder,
       },
     });

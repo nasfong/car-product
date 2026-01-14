@@ -41,6 +41,19 @@ export const STORE = {
   copyright: "© 2025",
 } as const;
 
+// Car Status - Maps numbers to Khmer labels
+export const CAR_STATUS = {
+  AVAILABLE: 1,
+  PENDING: 2,
+  SOLD: 3,
+} as const;
+
+export const CAR_STATUS_LABELS: Record<number, string> = {
+  1: "រៀបចំរួចរាល់",      // Available
+  2: "កំពុងរៀបចំ",       // Pending
+  3: "លក់ចេញហើយ",       // Sold
+} as const;
+
 // Authentication Credentials
 // ⚠️ WARNING: In production, move these to environment variables
 // and use proper authentication with hashed passwords

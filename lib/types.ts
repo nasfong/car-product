@@ -13,7 +13,7 @@ export interface Car {
   vehicleType?: string;
   color?: string;
   papers?: string;
-  sold: boolean;
+  status: number;
   createdAt: string;
 }
 

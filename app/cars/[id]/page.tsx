@@ -128,8 +128,12 @@ export default async function CarDetailPage({
                   <span>{car.location}</span>
                 </div>
                 <div className="flex gap-2">
-                  <div className={`inline-block px-3 py-1 text-sm rounded-full ${car.sold ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                    {car.sold ? 'លក់ចេញហើយ' : 'រៀបចំរួចរាល់'}
+                  <div className={`inline-block px-3 py-1 text-sm rounded-full ${
+                    car.status === 3 ? 'bg-red-100 text-red-800' :
+                    car.status === 2 ? 'bg-blue-700 text-white' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {car.status === 3 ? 'លក់ចេញហើយ' : car.status === 2 ? 'កំពុងរៀបចំ' : 'រៀបចំរួចរាល់'}
                   </div>
                 </div>
               </div>
@@ -180,8 +184,12 @@ export default async function CarDetailPage({
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">ស្ថានភាពលក់:</span>
-                  <span className={`font-medium ${car.sold ? 'text-red-600' : 'text-green-600'}`}>
-                    {car.sold ? 'លក់ចេញហើយ' : 'រៀបចំរួចរាល់'}
+                  <span className={`font-medium ${
+                    car.status === 3 ? 'text-red-600' :
+                    car.status === 2 ? 'text-blue-700' :
+                    'text-green-600'
+                  }`}>
+                    {car.status === 3 ? 'លក់ចេញហើយ' : car.status === 2 ? 'កំពុងរៀបចំ' : 'រៀបចំរួចរាល់'}
                   </span>
                 </div>
                 <div className="flex justify-between">

@@ -182,7 +182,7 @@ export async function PUT(
     const color = formData.get('color') as string;
     const papers = formData.get('papers') as string;
     const tiktokUrl = formData.get('tiktokUrl') as string;
-    const sold = formData.get('sold') === 'true';
+    const status = parseInt(formData.get('status') as string) || 1;
 
     // Update car in database
     const updatedCar = await prisma.car.update({
@@ -200,7 +200,7 @@ export async function PUT(
         color: color || null,
         papers: papers || null,
         tiktokUrl: tiktokUrl || null,
-        sold,
+        status,
       },
     });
 

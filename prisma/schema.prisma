@@ -21,7 +21,7 @@ model Car {
   vehicleType     String?  // SUV, Sedan, Hatchback, etc.
   color           String?
   papers          String?  // Tax paper, Blue book, etc.
-  sold            Boolean  @default(false)
+  status          Int      @default(1) // 1: រៀបចំរួចរាល់, 2: កំពុងរៀបចំ, 3: លក់ចេញហើយ
   displayOrder    Int      @default(0) // For drag and drop ordering
   
   createdAt       DateTime @default(now())

@@ -70,9 +70,11 @@ export default async function Image({
     (await resolveCarImageUrl(car.images?.[0])) || `${baseUrl}/logo.png`;
   const priceLabel = formatPrice(car.price);
   const specs = buildSpecs([car.transmission, car.fuelType, car.location]);
-  const statusLabel = car.sold ? "Sold" : "Available";
-  const statusStyles = car.sold
+  const statusLabel = car.status === 3 ? "Sold" : car.status === 2 ? "Pending" : "Available";
+  const statusStyles = car.status === 3
     ? { background: "#fee2e2", color: "#b91c1c" }
+    : car.status === 2
+    ? { background: "#fef3c7", color: "#92400e" }
     : { background: "#dcfce7", color: "#166534" };
 
   return new ImageResponse(

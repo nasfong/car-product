@@ -59,7 +59,7 @@ interface CarFormData {
   color: string;
   papers: string;
   tiktokUrl: string;
-  sold: boolean;
+  status: number;
 }
 
 interface CarFormProps {
@@ -90,7 +90,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     color: "",
     papers: "",
     tiktokUrl: "",
-    sold: false,
+    status: 1,
   });
 
   // Configure sensors for @dnd-kit with immediate click activation
@@ -122,7 +122,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             color: data.color || "",
             papers: data.papers || "",
             tiktokUrl: data.tiktokUrl || "",
-            sold: data.sold || false,
+            status: data.status || 1,
           });
           setExistingImages(data.images || []);
           setExistingVideos(data.videos || []);
@@ -825,7 +825,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
               />
             </div>
 
-            {/* Sold Status Field */}
+            {/* Status Field */}
             <div>
               <label className="block text-base sm:text-sm font-medium text-gray-700 mb-3">
                 ស្ថានភាពលក់
@@ -834,10 +834,10 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
                   <input
                     type="radio"
-                    name="sold"
-                    value="false"
-                    checked={!formData.sold}
-                    onChange={() => setFormData(prev => ({ ...prev, sold: false }))}
+                    name="status"
+                    value="1"
+                    checked={formData.status === 1}
+                    onChange={() => setFormData(prev => ({ ...prev, status: 1 }))}
                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                   />
                   <span className="text-base sm:text-sm text-gray-700">រៀបចំរួចរាល់</span>
@@ -845,10 +845,21 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
                   <input
                     type="radio"
-                    name="sold"
-                    value="true"
-                    checked={formData.sold}
-                    onChange={() => setFormData(prev => ({ ...prev, sold: true }))}
+                    name="status"
+                    value="2"
+                    checked={formData.status === 2}
+                    onChange={() => setFormData(prev => ({ ...prev, status: 2 }))}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-base sm:text-sm text-gray-700">កំពុងរៀបចំ</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="3"
+                    checked={formData.status === 3}
+                    onChange={() => setFormData(prev => ({ ...prev, status: 3 }))}
                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                   />
                   <span className="text-base sm:text-sm text-gray-700">លក់ចេញហើយ</span>
