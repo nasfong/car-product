@@ -44,7 +44,6 @@ export default function RootLayout({
         <meta property="og:description" content={STORE.description.full} />
         <meta property="og:image" content="/logo.png" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
         <link rel="preconnect" href={publicUrl} />
         <link rel="dns-prefetch" href={publicUrl} />
       </head>

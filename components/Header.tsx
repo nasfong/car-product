@@ -20,7 +20,7 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
 
   const handleLogoTouch = useCallback(() => {
     // Detect mobile double tap without blocking scroll.
-    const now = Date.now();
+    const now = typeof window !== 'undefined' ? Date.now() : 0;
     if (now - lastTapRef.current < 350) {
       lastTapRef.current = 0;
       handleLogoDoubleClick();
