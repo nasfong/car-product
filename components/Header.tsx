@@ -30,11 +30,21 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
   }, [handleLogoDoubleClick]);
 
   return (
-    <header className="bg-linear-to-r from-blue-700 to-teal-600 text-white shadow-lg">
+    <header className="bg-linear-to-r from-blue-700 to-teal-600 text-white shadow-lg relative">
       <div className="container mx-auto px-4 py-4 sm:py-6">
+        {/* Floating Logout Button */}
+        {isAuthenticated && (
+          <button
+            onClick={onLogout}
+            className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            Logout
+          </button>
+        )}
+        
         {/* Mobile Layout - Stacked */}
         <div className="">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <div
               className="flex space-x-2 cursor-pointer select-none"
               test-id="header-logo"
@@ -51,27 +61,17 @@ function Header({ isAuthenticated, onAddCar, onLogout, onShowLogin }: HeaderProp
               />
               <div className="leading-tight space-y-1">
                 <h1 className="text-[32px] font-bold tracking-tight">{STORE.name.khmer}</h1>
-                <p className="text-blue-200 text-[18px] font-semibold tracking-wide">{STORE.name.english}</p>
-                <p className="text-blue-100/80 text-[14px] font-medium">{STORE.name.description}</p>
+                <p className="text-[18px] font-semibold tracking-wide">{STORE.name.english}</p>
+                <p className="text-[18px] font-medium">{STORE.name.description}</p>
               </div>
 
             </div>
-            {isAuthenticated && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onLogout}
-                  className="bg-red-500 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-red-600 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
           </div>
           <div className="flex justify-center">
             {isAuthenticated && (
               <button
                 onClick={onAddCar}
-                className="bg-white text-blue-700 px-4 lg:px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md text-sm lg:text-base"
+                className="bg-white text-blue-700 px-4 lg:px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md text-sm lg:text-base mt-4"
               >
                 + បន្ថែមរថយន្ត
               </button>

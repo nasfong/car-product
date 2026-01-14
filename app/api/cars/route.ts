@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, saveVideo } from '@/lib/storage';
+import { cacheGet, cacheSet, cacheClear, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -10,15 +11,26 @@ export const maxDuration = 60; // 60 seconds timeout
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-// GET /api/cars - List all cars
+// GET /api/cars - List all cars with caching
 export async function GET() {
   try {
+    // Try to get from cache first
+    const cachedCars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (cachedCars) {
+      console.log('Returning cars from cache');
+      return NextResponse.json(cachedCars);
+    }
+
+    // If not in cache, fetch from database
     const cars = await prisma.car.findMany({
       orderBy: [
         { displayOrder: 'asc' },
         { createdAt: 'desc' }
       ],
     });
+
+    // Cache the result
+    await cacheSet(CACHE_KEYS.CARS_LIST, cars, CACHE_EXPIRY_TIME.CARS_LIST);
 
     return NextResponse.json(cars);
   } catch (error) {
@@ -115,6 +127,9 @@ export async function POST(request: NextRequest) {
         displayOrder: nextOrder,
       },
     });
+
+    // Invalidate cache after creating a new car
+    await cacheClear(CACHE_KEYS.CARS_LIST);
 
     return NextResponse.json(car, { status: 201 });
   } catch (error) {

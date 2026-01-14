@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, memo, useCallback } from 'react';
+import Image from 'next/image';
 import { X } from "lucide-react";
 import ErrorDialog from "./ErrorDialog";
 import {
@@ -297,9 +298,6 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
     try {
       const data = new FormData();
-
-      console.log('Form data before submission:', formData);
-
       // Append all form fields directly
       Object.entries(formData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -485,11 +483,12 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                       }}
                     >
                       {activeId && draggedImage && activeId.startsWith('existing-') ? (
-                        <div className="relative opacity-95 transform rotate-3 scale-110 pointer-events-none">
-                          <img
+                        <div className="relative opacity-95 transform rotate-3 scale-110 pointer-events-none w-24 h-24">
+                          <Image
                             src={draggedImage}
                             alt="Dragging"
-                            className="w-24 h-24 object-cover rounded-lg border-2 border-blue-400 shadow-2xl pointer-events-none"
+                            fill
+                            className="object-cover rounded-lg border-2 border-blue-400 shadow-2xl pointer-events-none"
                             style={{
                               userSelect: 'none',
                               WebkitUserSelect: 'none',
@@ -827,42 +826,80 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Status Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-3">
                 ស្ថានភាពលក់
               </label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 1
+                  ? 'border-green-500 bg-green-50 shadow-sm'
+                  : 'border-gray-300 bg-white hover:border-green-300 hover:bg-green-50/50'
+                  }`}>
                   <input
                     type="radio"
                     name="status"
                     value="1"
                     checked={formData.status === 1}
                     onChange={() => setFormData(prev => ({ ...prev, status: 1 }))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    className="sr-only"
                   />
-                  <span className="text-base sm:text-sm text-gray-700">រៀបចំរួចរាល់</span>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.status === 1
+                    ? 'border-green-500 bg-green-500'
+                    : 'border-gray-300 bg-white'
+                    }`}>
+                    {formData.status === 1 && (
+                      <div className="w-2 h-2 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className={`text-base sm:text-sm font-medium ${formData.status === 1 ? 'text-green-700' : 'text-gray-700'
+                    }`}>រៀបចំរួចរាល់</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+
+                <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 2
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+                  }`}>
                   <input
                     type="radio"
                     name="status"
                     value="2"
                     checked={formData.status === 2}
                     onChange={() => setFormData(prev => ({ ...prev, status: 2 }))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    className="sr-only"
                   />
-                  <span className="text-base sm:text-sm text-gray-700">កំពុងរៀបចំ</span>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.status === 2
+                    ? 'border-blue-500 bg-blue-500'
+                    : 'border-gray-300 bg-white'
+                    }`}>
+                    {formData.status === 2 && (
+                      <div className="w-2 h-2 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className={`text-base sm:text-sm font-medium ${formData.status === 2 ? 'text-blue-700' : 'text-gray-700'
+                    }`}>កំពុងរៀបចំ</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
+
+                <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 3
+                  ? 'border-red-500 bg-red-50 shadow-sm'
+                  : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50/50'
+                  }`}>
                   <input
                     type="radio"
                     name="status"
                     value="3"
                     checked={formData.status === 3}
                     onChange={() => setFormData(prev => ({ ...prev, status: 3 }))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    className="sr-only"
                   />
-                  <span className="text-base sm:text-sm text-gray-700">លក់ចេញហើយ</span>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.status === 3
+                    ? 'border-red-500 bg-red-500'
+                    : 'border-gray-300 bg-white'
+                    }`}>
+                    {formData.status === 3 && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
+                  </div>
+                  <span className={`text-base sm:text-sm font-medium ${formData.status === 3 ? 'text-red-700' : 'text-gray-700'
+                    }`}>លក់ចេញហើយ</span>
                 </label>
               </div>
             </div>

@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, deleteImage, saveVideo, deleteVideo } from '@/lib/storage';
+import { cacheGet, cacheSet, cacheDelete, cacheClear, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds timeout
 
-// GET /api/cars/[id] - Get a single car
+// GET /api/cars/[id] - Get a single car with caching
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    
+    // Try to get from cache first
+    const cachedCar = await cacheGet(CACHE_KEYS.CAR_DETAIL(id));
+    if (cachedCar) {
+      console.log(`Returning car ${id} from cache`);
+      return NextResponse.json(cachedCar);
+    }
+
+    // If not in cache, fetch from database
     const car = await prisma.car.findUnique({
       where: { id },
     });
@@ -23,6 +33,9 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // Cache the result
+    await cacheSet(CACHE_KEYS.CAR_DETAIL(id), car, CACHE_EXPIRY_TIME.CAR_DETAIL);
 
     return NextResponse.json(car);
   } catch (error) {
@@ -204,6 +217,10 @@ export async function PUT(
       },
     });
 
+    // Invalidate caches after updating
+    await cacheDelete(CACHE_KEYS.CAR_DETAIL(id));
+    await cacheClear(CACHE_KEYS.CARS_LIST);
+
     return NextResponse.json(updatedCar);
   } catch (error) {
     console.error('Error updating car:', error);
@@ -271,6 +288,10 @@ export async function DELETE(
     await prisma.car.delete({
       where: { id },
     });
+
+    // Invalidate caches after deletion
+    await cacheDelete(CACHE_KEYS.CAR_DETAIL(id));
+    await cacheClear(CACHE_KEYS.CARS_LIST);
 
     return NextResponse.json({ message: 'លុបរថយន្តចេញដោយជោគជ័យ។' });
   } catch (error) {

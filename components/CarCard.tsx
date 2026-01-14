@@ -63,11 +63,13 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
     : {};
 
   return (
-    <div>
+    <div
+      {...dragProps}
+      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 group relative touch-manipulation ${isDragging || isSortableDragging ? 'shadow-xl ring-2 ring-blue-200' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
+    >
       <Link href={`/cars/${car.id}`} className="block">
         <div
-          {...dragProps}
-          className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group relative touch-manipulation ${isDragging || isSortableDragging ? 'shadow-xl ring-2 ring-blue-200' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
+          className="cursor-pointer"
           onClick={(e) => {
             if (isDragging || isSortableDragging || isSorting) {
               e.preventDefault();
@@ -203,19 +205,18 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
             </div>
 
             {/* Price */}
-            <div className="mb-4">
+            <div className={`${isAuthenticated ? 'mb-4' : 'mb-4'}`}>
               <span className="text-lg font-bold text-green-600">
                 {car.price}
               </span>
             </div>
-
-
           </div>
         </div>
       </Link>
-      {/* Admin buttons - mobile-friendly */}
+
+      {/* Admin buttons - Outside Link but visually inside card */}
       {isAuthenticated && !isOverlay && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 px-4 mb-4">
           <button
             onClick={(e) => {
               e.stopPropagation();
