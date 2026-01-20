@@ -1,15 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Car } from '@/lib/types';
 
 export function useCars() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
   const fetchCars = useCallback(async () => {
+    // Cancel previous request if still pending
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+
+    controllerRef.current = new AbortController();
+
     try {
       setLoading(true);
-      const response = await fetch('/api/cars');
+      const response = await fetch('/api/cars', {
+        signal: controllerRef.current.signal,
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch cars');
       }
@@ -17,6 +27,10 @@ export function useCars() {
       setCars(data);
       setError(null);
     } catch (err) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       console.error('Error fetching cars:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch cars');
     } finally {
@@ -45,6 +59,12 @@ export function useCars() {
 
   useEffect(() => {
     fetchCars();
+
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+    };
   }, [fetchCars]);
 
   const updateCarsOrder = useCallback((newCars: Car[]) => {

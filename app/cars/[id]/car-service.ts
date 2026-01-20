@@ -81,7 +81,7 @@ export async function getCar(id: string): Promise<Car | null> {
   try {
     const baseUrl = await getBaseUrl();
     const response = await fetch(`${baseUrl}/api/cars/${id}`, {
-      cache: "no-store",
+      next: { revalidate: 3600 }, // Cache for 1 hour, enables request deduplication
     });
 
     if (!response.ok) {

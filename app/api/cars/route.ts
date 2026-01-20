@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, saveVideo } from '@/lib/storage';
-import { cacheGet, cacheSet, cacheClear, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
+import { cacheGet, cacheSet, cacheAddCarToList, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -132,8 +132,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Invalidate cache after creating a new car
-    await cacheClear(CACHE_KEYS.CARS_LIST);
+    // Add new car to cache (if cache exists) or let next GET fetch from DB
+    const cacheAdded = await cacheAddCarToList(car);
+    if (cacheAdded) {
+      console.log(`[POST] ✓ Car ${car.id} added to Redis cache`);
+    } else {
+      console.log(`[POST] ℹ Cache was empty, will be refreshed on next GET`);
+    }
 
     return NextResponse.json(car, { status: 201 });
   } catch (error) {

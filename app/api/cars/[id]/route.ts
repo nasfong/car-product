@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, deleteImage, saveVideo, deleteVideo } from '@/lib/storage';
-import { cacheGet, cacheSet, cacheDelete, cacheClear, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
+import { cacheGet, cacheSet, cacheDelete, cacheGetCarFromList, cacheUpdateCarInList, cacheDeleteCarFromList, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -15,10 +15,10 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // Try to get from cache first
-    const cachedCar = await cacheGet(CACHE_KEYS.CAR_DETAIL(id));
+    // Try to get from cached cars list first
+    const cachedCar = await cacheGetCarFromList(id);
     if (cachedCar) {
-      console.log(`Returning car ${id} from cache`);
+      console.log(`Returning car ${id} from CARS_LIST cache`);
       return NextResponse.json(cachedCar);
     }
 
@@ -33,9 +33,6 @@ export async function GET(
         { status: 404 }
       );
     }
-
-    // Cache the result
-    await cacheSet(CACHE_KEYS.CAR_DETAIL(id), car, CACHE_EXPIRY_TIME.CAR_DETAIL);
 
     return NextResponse.json(car);
   } catch (error) {
@@ -226,9 +223,12 @@ export async function PUT(
       data: updateData,
     });
 
-    // Invalidate caches after updating
-    await cacheDelete(CACHE_KEYS.CAR_DETAIL(id));
-    await cacheClear(CACHE_KEYS.CARS_LIST);
+    // Update cache: update car in list cache
+    console.log(`[PUT] Car ${id} updated in DB`);
+    const cacheUpdated = await cacheUpdateCarInList(updatedCar);
+    if (!cacheUpdated) {
+      console.warn(`[PUT] ⚠ Cache update failed for car ${id}, will be refreshed on next GET`);
+    }
 
     return NextResponse.json(updatedCar);
   } catch (error) {
@@ -297,10 +297,13 @@ export async function DELETE(
     await prisma.car.delete({
       where: { id },
     });
+    console.log(`[DELETE] Car ${id} deleted from DB`);
 
-    // Invalidate caches after deletion
-    await cacheDelete(CACHE_KEYS.CAR_DETAIL(id));
-    await cacheClear(CACHE_KEYS.CARS_LIST);
+    // Update cache: delete car from list cache
+    const cacheDeleted = await cacheDeleteCarFromList(id);
+    if (!cacheDeleted) {
+      console.warn(`[DELETE] ⚠ Cache deletion failed for car ${id}, will be refreshed on next GET`);
+    }
 
     return NextResponse.json({ message: 'លុបរថយន្តចេញដោយជោគជ័យ។' });
   } catch (error) {

@@ -4,7 +4,7 @@ let redisClient: RedisClientType | null = null;
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const CACHE_EXPIRY = {
-  CARS_LIST: 5 * 60, // 5 minutes
+  CARS_LIST: 24 * 60 * 60, // 1 day
   CAR_DETAIL: 10 * 60, // 10 minutes
   ADMIN_CHECK: 1 * 60, // 1 minute
 };
@@ -17,12 +17,14 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
   try {
     const socketConfig: any = {
       reconnectStrategy: (retries: number) => {
-        if (retries > 10) return new Error('Redis max retries exceeded');
-        return Math.min(retries * 100, 3000); // Increased from 50ms to 100ms
+        if (retries > 15) return new Error('Redis max retries exceeded');
+        const delay = Math.min(retries * 500, 30000); // Max 30 second delay
+        console.log(`Redis reconnect attempt ${retries}, delay: ${delay}ms`);
+        return delay;
       },
       keepAlive: 30000, // Send keep-alive every 30 seconds
       noDelay: true,
-      connectTimeout: 10000, // 10 second timeout
+      connectTimeout: 15000, // 15 second timeout
     };
 
     // Handle TLS for REDISS protocol
@@ -39,7 +41,7 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
     });
 
     redisClient.on('error', (err) => {
-      console.error('Redis Client Error:', err.message);
+      console.error('Redis Client Error:', err.message || err);
     });
     redisClient.on('connect', () => console.log('Redis Connected'));
     redisClient.on('ready', () => console.log('Redis Ready'));
@@ -98,10 +100,142 @@ export const cacheClear = async (pattern: string) => {
   }
 };
 
+// New selective cache operations to avoid clearing entire list
+
+/**
+ * Get a specific car from the cached cars list
+ */
+export const cacheGetCarFromList = async (carId: string) => {
+  try {
+    const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (!cars || !Array.isArray(cars)) return null;
+    return cars.find((car: any) => car.id === carId) || null;
+  } catch (error) {
+    console.error(`Cache get car from list error for ID ${carId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Update a specific car in the cached cars list without clearing the entire cache
+ */
+export const cacheUpdateCarInList = async (updatedCar: any) => {
+  try {
+    const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (!cars || !Array.isArray(cars)) {
+      console.warn(`[cacheUpdateCarInList] Cache not found for car ${updatedCar.id}`);
+      return false;
+    }
+
+    const index = cars.findIndex((car: any) => car.id === updatedCar.id);
+    if (index === -1) {
+      console.warn(`[cacheUpdateCarInList] Car ${updatedCar.id} not found in cache`);
+      return false;
+    }
+
+    cars[index] = updatedCar;
+    await cacheSet(CACHE_KEYS.CARS_LIST, cars, CACHE_EXPIRY.CARS_LIST);
+    console.log(`[cacheUpdateCarInList] ✓ Successfully updated car ${updatedCar.id} in cache`);
+    return true;
+  } catch (error) {
+    console.error(`[cacheUpdateCarInList] Error updating car ${updatedCar.id}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Delete a specific car from the cached cars list without clearing the entire cache
+ */
+export const cacheDeleteCarFromList = async (carId: string) => {
+  try {
+    const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (!cars || !Array.isArray(cars)) {
+      console.warn(`[cacheDeleteCarFromList] Cache not found for car ${carId}`);
+      return false;
+    }
+
+    const filteredCars = cars.filter((car: any) => car.id !== carId);
+    if (filteredCars.length === cars.length) {
+      console.warn(`[cacheDeleteCarFromList] Car ${carId} not found in cache`);
+      return false;
+    }
+
+    await cacheSet(CACHE_KEYS.CARS_LIST, filteredCars, CACHE_EXPIRY.CARS_LIST);
+    console.log(`[cacheDeleteCarFromList] ✓ Successfully deleted car ${carId} from cache`);
+    return true;
+  } catch (error) {
+    console.error(`[cacheDeleteCarFromList] Error deleting car ${carId}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Update car order in the cached cars list
+ */
+export const cacheUpdateCarOrder = async (carIds: string[]) => {
+  try {
+    const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (!cars || !Array.isArray(cars)) {
+      console.warn('Cache list not found or not an array, skipping order update');
+      return false;
+    }
+
+    console.log(`Updating order for ${carIds.length} cars in cache`);
+
+    // Create a map of carIds to their new order
+    const orderMap = new Map(carIds.map((id, index) => [id, index + 1]));
+
+    // Update displayOrder for all cars in the list
+    const updatedCars = cars.map((car: any) => {
+      const newOrder = orderMap.get(car.id);
+      if (newOrder !== undefined) {
+        console.log(`Car ${car.id}: order changed to ${newOrder}`);
+        return {
+          ...car,
+          displayOrder: newOrder
+        };
+      }
+      return car;
+    });
+
+    // Re-sort by displayOrder to maintain consistency
+    updatedCars.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+
+    await cacheSet(CACHE_KEYS.CARS_LIST, updatedCars, CACHE_EXPIRY.CARS_LIST);
+    console.log('Cache order updated successfully');
+    return true;
+  } catch (error) {
+    console.error(`Cache update car order error:`, error);
+    return false;
+  }
+};
+
+/**
+ * Add a newly created car to the cached cars list
+ * If cache doesn't exist, returns false to trigger normal cache set on next GET
+ */
+export const cacheAddCarToList = async (newCar: any) => {
+  try {
+    const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
+    if (!cars || !Array.isArray(cars)) {
+      console.log(`[cacheAddCarToList] Cache not found, will be populated on next GET for car ${newCar.id}`);
+      return false;
+    }
+
+    // Add new car to the beginning of the list (newest first for display)
+    const updatedCars = [newCar, ...cars];
+    await cacheSet(CACHE_KEYS.CARS_LIST, updatedCars, CACHE_EXPIRY.CARS_LIST);
+    console.log(`[cacheAddCarToList] ✓ Successfully added car ${newCar.id} to cache`);
+    return true;
+  } catch (error) {
+    console.error(`[cacheAddCarToList] Error adding car ${newCar.id}:`, error);
+    return false;
+  }
+};
+
 export const CACHE_KEYS = {
-  CARS_LIST: 'cars:list',
-  CAR_DETAIL: (id: string) => `car:${id}`,
-  CARS_PATTERN: 'car:*',
+  CARS_LIST: process.env.MINIO_BUCKET_NAME === 'car-images' ? `cars:list` : `dev:cars:list`,
+  CARS_PATTERN: process.env.MINIO_BUCKET_NAME === 'car-images' ? 'car:*' : 'dev:car:*',
 };
 
 export const CACHE_EXPIRY_TIME = CACHE_EXPIRY;

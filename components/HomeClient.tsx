@@ -50,10 +50,14 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
 
   // Fetch cars on client side
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchCars() {
       try {
         setLoading(true);
-        const response = await fetch('/api/cars');
+        const response = await fetch('/api/cars', {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch cars');
@@ -62,6 +66,10 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
         const data = await response.json();
         setCars(data || []);
       } catch (err) {
+        // Ignore abort errors (cleanup on unmount or re-render)
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
         console.error('Error fetching cars:', err);
         setErrorDialog({
           isOpen: true,
@@ -74,6 +82,8 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
     }
 
     fetchCars();
+
+    return () => controller.abort();
   }, []);
 
   const disableBodyTouchInteractions = useCallback(() => {
@@ -159,7 +169,9 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
         throw new Error('Failed to delete car');
       }
 
-      refreshCars();
+      // Optimistically update local state instead of refetching all cars
+      setCars(prevCars => prevCars.filter(car => car.id !== carId));
+      console.log(`[HomeClient] Deleted car ${carId} from local state`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "មិនអាចលុបរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។";
       setErrorDialog({
@@ -167,7 +179,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
         message
       });
     }
-  }, [refreshCars]);
+  }, []);
 
   const handleFormSuccess = useCallback(() => {
     setShowForm(false);
@@ -197,17 +209,18 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
     router.refresh();
   }, [logout, router]);
 
-  // Configure sensors for @dnd-kit with mobile-first approach
+  // Configure sensors for @dnd-kit with optimized touch and pointer handling
   const sensors = useSensors(
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 100,
-        tolerance: 8,
+        tolerance: 5,
       },
     }),
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3,
+        distance: 8,
+        delay: 0,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -357,7 +370,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
                 items={cars.map(car => car.id)}
                 strategy={rectSortingStrategy}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 will-change-auto">
                   {cars.map((car) => (
                     <CarCard
                       key={car.id}
@@ -372,6 +385,10 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
                 </div>
               </SortableContext>
               <DragOverlay
+                dropAnimation={{
+                  duration: 250,
+                  easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+                }}
                 style={{
                   cursor: 'grabbing',
                   touchAction: 'none',

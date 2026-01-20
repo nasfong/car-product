@@ -52,7 +52,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
   const style = shouldUseSortable
     ? {
       transform: CSS.Transform.toString(transform),
-      transition,
+      transition: isSortableDragging ? 'none' : transition,
       opacity: isDragging || isSortableDragging ? 0.5 : 1,
     }
     : {};
@@ -65,7 +65,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
   return (
     <div
       {...dragProps}
-      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 group relative touch-manipulation ${isDragging || isSortableDragging ? 'shadow-xl ring-2 ring-blue-200' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
+      className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 group relative touch-manipulation will-change-transform ${isDragging || isSortableDragging ? 'shadow-xl ring-2 ring-blue-200' : ''} ${isOverlay ? 'pointer-events-none' : ''}`}
     >
       <Link href={`/cars/${car.id}`} className="block">
         <div
@@ -82,7 +82,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
             <div
               {...attributes}
               {...listeners}
-              className="absolute top-2 right-2 z-20 bg-gray-600/80 hover:bg-gray-700 text-white p-3 rounded-full cursor-pointer hover:cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-200"
+              className="absolute top-2 right-2 z-20 bg-gray-600/80 hover:bg-gray-700 text-white p-3 rounded-full cursor-pointer hover:cursor-grab active:cursor-grabbing touch-manipulation transition-colors duration-150 will-change-auto"
               style={{
                 touchAction: 'none',
                 WebkitTouchCallout: 'none',
@@ -121,7 +121,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
             {/* Scrollable Image Container */}
             <div
               className="w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide flex"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
               onScroll={handleScroll}
             >
               {car.images.map((image, index) => {

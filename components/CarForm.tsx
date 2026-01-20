@@ -447,34 +447,34 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200" style={{ WebkitUserSelect: 'none' }}>
-      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-screen sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200" style={{ 
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-300" style={{ WebkitUserSelect: 'none' }}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-screen sm:max-h-[95vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-500 ease-out" style={{ 
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         WebkitTextSizeAdjust: 'none',
       }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/80 bg-gradient-to-br from-white to-gray-50/50 sticky top-0 z-10 transition-all duration-300">
           <div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
               {carId ? "កែប្រែរថយន្ត" : "បន្ថែមរថយន្ត"}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 mt-1.5">
               {carId ? "Edit Car Details" : "Add New Car to Inventory"}
             </p>
           </div>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg p-3 sm:p-2 hover:bg-gray-100 transition-colors touch-manipulation"
+            className="rounded-lg p-2.5 hover:bg-gray-100 transition-all duration-200 touch-manipulation group"
           >
-            <X className="h-6 w-6 sm:h-5 sm:w-5 text-gray-500" />
+            <X className="h-5 w-5 sm:h-5 sm:w-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
           </button>
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1" style={{ WebkitTouchCallout: 'none' }}>
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 scroll-smooth" style={{ WebkitTouchCallout: 'none' }}>
+          <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
             {/* Image Upload */}
             <div className="space-y-3">
               <label className="block text-base sm:text-sm font-medium text-gray-900">
@@ -681,7 +681,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Name Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-2.5">
                 ឈ្មោះរថយន្ត <span className="text-red-500">*</span>
               </label>
               <input
@@ -691,7 +691,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation transition-all"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="តូយ៉ូតា ខេមរី"
                 enterKeyHint="next"
               />
@@ -699,7 +699,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Price Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-2.5">
                 តម្លៃ USD <span className="text-red-500">*</span>
               </label>
               <input
@@ -709,7 +709,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="32000"
                 enterKeyHint="next"
               />
@@ -717,7 +717,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Transmission Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 ប្រអប់លេខ <span className="text-red-500">*</span>
               </label>
               <input
@@ -728,7 +728,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onKeyDown={handleKeyDown}
                 list="transmission-options"
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="Select or type..."
                 enterKeyHint="next"
               />
@@ -741,7 +741,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Fuel Type Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 ប្រភេតប្រេង <span className="text-red-500">*</span>
               </label>
               <input
@@ -752,7 +752,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onKeyDown={handleKeyDown}
                 list="fuelType-options"
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="Select or type..."
                 enterKeyHint="next"
               />
@@ -765,7 +765,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Vehicle Type Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 ប្រភេទរថយន្ត
               </label>
               <input
@@ -775,7 +775,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 list="vehicleType-options"
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="Select or type..."
                 enterKeyHint="next"
               />
@@ -788,7 +788,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Location Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-2.5">
                 ទីតាំង <span className="text-red-500">*</span>
               </label>
               <input
@@ -798,7 +798,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="Phnom Penh"
                 enterKeyHint="next"
               />
@@ -806,7 +806,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Color Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 ពណ៌ / Color
               </label>
               <input
@@ -815,7 +815,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 value={formData.color}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="White, Black, Silver..."
                 enterKeyHint="next"
               />
@@ -823,7 +823,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Papers Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 ឯកសារ / Papers
               </label>
               <input
@@ -833,7 +833,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 list="papers-options"
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="Select or type..."
                 enterKeyHint="next"
               />
@@ -846,7 +846,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* TikTok URL Field */}
             <div>
-              <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-medium text-gray-900 mb-2.5">
                 TikTok Video URL
               </label>
               <input
@@ -855,18 +855,18 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 value={formData.tiktokUrl}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="https://www.tiktok.com/@username/video..."
                 enterKeyHint="next"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-2">
                 បញ្ចូលតំណភ្ជាប់វីដេអូ TikTok ពីរថយន្តនេះ (បេីមាន)
               </p>
             </div>
 
             {/* Description Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-2.5">
                 ការពិពណ៌នា
               </label>
               <textarea
@@ -874,7 +874,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation resize-none transition-all"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation resize-none transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
                 onBlur={(e) => {
                   // Ensure keyboard closes on blur
@@ -887,7 +887,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
             {/* Created At Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-2.5">
                 ថ្ងៃបង្កើត <span className="text-red-500">*</span>
               </label>
               <input
@@ -896,19 +896,19 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 value={formData.createdAt}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-4 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none touch-manipulation cursor-pointer transition-all hover:border-gray-400 bg-white"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation cursor-pointer transition-all duration-200 bg-white hover:border-gray-300"
               />
             </div>
 
             {/* Status Field */}
             <div>
-              <label className="block text-base sm:text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-base sm:text-sm font-semibold text-gray-900 mb-3.5">
                 ស្ថានភាពលក់
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 1
-                  ? 'border-green-500 bg-green-50 shadow-sm'
-                  : 'border-gray-300 bg-white hover:border-green-300 hover:bg-green-50/50'
+                  ? 'border-green-500 bg-green-50/80 shadow-sm'
+                  : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30'
                   }`}>
                   <input
                     type="radio"
@@ -931,8 +931,8 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 </label>
 
                 <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 2
-                  ? 'border-blue-500 bg-blue-50 shadow-sm'
-                  : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+                  ? 'border-blue-500 bg-blue-50/80 shadow-sm'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
                   }`}>
                   <input
                     type="radio"
@@ -955,8 +955,8 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 </label>
 
                 <label className={`relative flex items-center justify-center gap-3 px-4 py-4 sm:py-3 rounded-lg border-2 cursor-pointer transition-all duration-200 touch-manipulation ${formData.status === 3
-                  ? 'border-red-500 bg-red-50 shadow-sm'
-                  : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50/50'
+                  ? 'border-red-500 bg-red-50/80 shadow-sm'
+                  : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50/30'
                   }`}>
                   <input
                     type="radio"
@@ -983,12 +983,12 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
           </div>
 
           {/* Footer with Action Buttons - Inside Form */}
-          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 relative z-20 mb-20">
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200/80 bg-gradient-to-br from-gray-50/50 to-white relative z-20 mb-20">
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
+              className="flex-1 sm:flex-none px-6 py-3.5 sm:py-3 text-base sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer select-none"
               style={{ WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none' }}
             >
               បោះបង់
@@ -996,11 +996,11 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 sm:flex-none px-6 py-4 sm:py-3 text-base sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
+              className="flex-1 sm:flex-none px-6 py-3.5 sm:py-3 text-base sm:text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer select-none shadow-sm hover:shadow-md"
               style={{ WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none' }}
             >
               {loading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
