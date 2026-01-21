@@ -1,4 +1,5 @@
 import { createClient, RedisClientType } from 'redis';
+import { Car } from './types';
 
 let redisClient: RedisClientType | null = null;
 
@@ -72,7 +73,7 @@ export const cacheGet = async (key: string) => {
   }
 };
 
-export const cacheSet = async (key: string, value: never, expiry: number = CACHE_EXPIRY.CARS_LIST) => {
+export const cacheSet = async (key: string, value: unknown, expiry: number = CACHE_EXPIRY.CARS_LIST) => {
   try {
     const client = await getRedisClient();
     await client.setEx(key, expiry, JSON.stringify(value));
@@ -113,7 +114,7 @@ export const cacheGetCarFromList = async (carId: string) => {
     if (!cars || !Array.isArray(cars)) {
       return null;
     }
-    return cars.find((car: any) => car.id === carId) || null;
+    return cars.find((car: Record<string, unknown>) => (car as unknown as Car).id === carId) || null;
   } catch (_error) {
     console.error(`Cache get car from list error for ID ${carId}:`, _error);
     return null;
@@ -123,23 +124,23 @@ export const cacheGetCarFromList = async (carId: string) => {
 /**
  * Update a specific car in the cached cars list without clearing the entire cache
  */
-export const cacheUpdateCarInList = async (updatedCar: never) => {
+export const cacheUpdateCarInList = async (updatedCar: Record<string, unknown>) => {
   try {
     const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
     if (!cars || !Array.isArray(cars)) {
-      console.warn(`[cacheUpdateCarInList] Cache not found for car ${(updatedCar as Record<string, unknown>).id}`);
+      console.warn(`[cacheUpdateCarInList] Cache not found for car ${updatedCar.id}`);
       return false;
     }
 
-    const index = cars.findIndex((car: never) => car.id === updatedCar.id);
+    const index = cars.findIndex((car: Record<string, unknown>) => ((car as unknown) as Car).id === updatedCar.id);
     if (index === -1) {
-      console.warn(`[cacheUpdateCarInList] Car ${(updatedCar as Record<string, unknown>).id} not found in cache`);
+      console.warn(`[cacheUpdateCarInList] Car ${updatedCar.id} not found in cache`);
       return false;
     }
 
     cars[index] = updatedCar;
     await cacheSet(CACHE_KEYS.CARS_LIST, cars, CACHE_EXPIRY.CARS_LIST);
-    console.warn(`[cacheUpdateCarInList] Successfully updated car ${(updatedCar as Record<string, unknown>).id} in cache`);
+    console.warn(`[cacheUpdateCarInList] Successfully updated car ${updatedCar.id} in cache`);
     return true;
   } catch (_error) {
     console.error(`[cacheUpdateCarInList] Error updating car ${(updatedCar as Record<string, unknown>).id}:`, _error);
@@ -158,7 +159,7 @@ export const cacheDeleteCarFromList = async (carId: string) => {
       return false;
     }
 
-    const filteredCars = cars.filter((car: never) => car.id !== carId);
+    const filteredCars = cars.filter((car: Record<string, unknown>) => ((car as unknown) as Car).id !== carId);
     if (filteredCars.length === cars.length) {
       console.warn(`[cacheDeleteCarFromList] Car ${carId} not found in cache`);
       return false;
@@ -190,10 +191,10 @@ export const cacheUpdateCarOrder = async (carIds: string[]) => {
     const orderMap = new Map(carIds.map((id, index) => [id, index + 1]));
 
     // Update displayOrder for all cars in the list
-    const updatedCars = cars.map((car: never) => {
-      const newOrder = orderMap.get(car.id);
+    const updatedCars = cars.map((car: Record<string, unknown>) => {
+      const newOrder = orderMap.get((car as unknown as Car).id);
       if (newOrder !== undefined) {
-        console.warn(`Car ${car.id}: order changed to ${newOrder}`);
+        console.warn(`Car ${(car as unknown as Car).id}: order changed to ${newOrder}`);
         return {
           ...car,
           displayOrder: newOrder
@@ -203,7 +204,10 @@ export const cacheUpdateCarOrder = async (carIds: string[]) => {
     });
 
     // Re-sort by displayOrder to maintain consistency
-    updatedCars.sort((a: never, b: never) => a.displayOrder - b.displayOrder);
+    updatedCars.sort(
+      (a: Record<string, unknown>, b: Record<string, unknown>) =>
+        ((a as unknown as Car).displayOrder ?? 0) - ((b as unknown as Car).displayOrder ?? 0)
+    );
 
     await cacheSet(CACHE_KEYS.CARS_LIST, updatedCars, CACHE_EXPIRY.CARS_LIST);
     console.warn('Cache order updated successfully');
@@ -218,21 +222,21 @@ export const cacheUpdateCarOrder = async (carIds: string[]) => {
  * Add a newly created car to the cached cars list
  * If cache doesn't exist, returns false to trigger normal cache set on next GET
  */
-export const cacheAddCarToList = async (newCar: never) => {
+export const cacheAddCarToList = async (newCar: Record<string, unknown>) => {
   try {
     const cars = await cacheGet(CACHE_KEYS.CARS_LIST);
     if (!cars || !Array.isArray(cars)) {
-      console.warn(`[cacheAddCarToList] Cache not found, will be populated on next GET for car ${(newCar as Record<string, unknown>).id}`);
+      console.warn(`[cacheAddCarToList] Cache not found, will be populated on next GET for car ${newCar.id}`);
       return false;
     }
 
     // Add new car to the beginning of the list (newest first for display)
     const updatedCars = [newCar, ...cars];
     await cacheSet(CACHE_KEYS.CARS_LIST, updatedCars, CACHE_EXPIRY.CARS_LIST);
-    console.warn(`[cacheAddCarToList] Successfully added car ${(newCar as Record<string, unknown>).id} to cache`);
+    console.warn(`[cacheAddCarToList] Successfully added car ${newCar.id} to cache`);
     return true;
   } catch (_error) {
-    console.error(`[cacheAddCarToList] Error adding car ${(newCar as Record<string, unknown>).id}:`, _error);
+    console.error(`[cacheAddCarToList] Error adding car ${newCar.id}:`, _error);
     return false;
   }
 };

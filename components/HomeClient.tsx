@@ -9,6 +9,7 @@ import CarCard from "@/components/CarCard";
 import CarCardSkeleton from "@/components/CarCardSkeleton";
 import ErrorDialog from "@/components/ErrorDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { Car } from "@/lib/types";
 import {
   DndContext,
   closestCenter,
@@ -37,14 +38,14 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
   const router = useRouter();
   const [_isPending, _startTransition] = useTransition();
   const { login, logout } = useAuth();
-  const [cars, setCars] = useState<never[]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCarId, setEditingCarId] = useState<string | undefined>();
   const [showLogin, setShowLogin] = useState(false);
   const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: "" });
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [draggedCar, setDraggedCar] = useState<never>(null);
+  const [draggedCar, setDraggedCar] = useState<Car | null>(null);
   const [_isDragging, setIsDragging] = useState(false);
   const bodyTouchActionRef = useRef<string | null>(null);
 
@@ -240,7 +241,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
     setDraggedCar(draggedCarData);
   }, [cars, disableBodyTouchInteractions]);
 
-  const syncCarOrder = useCallback(async (newOrder: never[], previousOrder: never[]) => {
+  const syncCarOrder = useCallback(async (newOrder: Car[], previousOrder: Car[]) => {
     try {
       const token = localStorage.getItem('admin-token');
       const response = await fetch('/api/cars/reorder', {

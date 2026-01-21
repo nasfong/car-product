@@ -14,6 +14,7 @@ export interface Car {
   color?: string;
   papers?: string;
   status: number;
+  displayOrder: number;
   createdAt: string;
 }
 
