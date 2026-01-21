@@ -78,7 +78,7 @@ export async function saveVideo(
  */
 export async function deleteImage(imageUrl: string): Promise<void> {
   try {
-    console.log('Deleting image with URL:', imageUrl);
+    console.warn('Deleting image with URL:', imageUrl);
     
     // Extract filename from URL
     // URL format: https://minio-api.nasfong.site/car-images/cars/123456-abc.jpg
@@ -96,19 +96,19 @@ export async function deleteImage(imageUrl: string): Promise<void> {
     if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
       // Get everything after the bucket name
       const fileName = pathParts.slice(bucketIndex + 1).join('/');
-      console.log('Extracted filename for deletion:', fileName);
+      console.warn('Extracted filename for deletion:', fileName);
       
       if (fileName) {
         await deleteFromMinio(fileName);
-        console.log('Successfully deleted from MinIO:', fileName);
+        console.warn('Successfully deleted from MinIO:', fileName);
       }
     } else {
       console.error('Could not extract filename from URL:', imageUrl);
       throw new Error('Invalid image URL format');
     }
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    throw error;
+  } catch (_error) {
+    console.error('Error deleting image:', _error);
+    throw _error;
   }
 }
 
@@ -117,7 +117,7 @@ export async function deleteImage(imageUrl: string): Promise<void> {
  */
 export async function deleteVideo(videoUrl: string): Promise<void> {
   try {
-    console.log('Deleting video with URL:', videoUrl);
+    console.warn('Deleting video with URL:', videoUrl);
     
     // Extract filename from URL
     // URL format: https://minio-api.nasfong.site/car-images/cars/123456-abc.mp4
@@ -135,18 +135,18 @@ export async function deleteVideo(videoUrl: string): Promise<void> {
     if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
       // Get everything after the bucket name
       const fileName = pathParts.slice(bucketIndex + 1).join('/');
-      console.log('Extracted filename for deletion:', fileName);
+      console.warn('Extracted filename for deletion:', fileName);
       
       if (fileName) {
         await deleteFromMinio(fileName);
-        console.log('Successfully deleted from MinIO:', fileName);
+        console.warn('Successfully deleted from MinIO:', fileName);
       }
     } else {
       console.error('Could not extract filename from URL:', videoUrl);
       throw new Error('Invalid video URL format');
     }
-  } catch (error) {
-    console.error('Error deleting video:', error);
-    throw error;
+  } catch (_error) {
+    console.error('Error deleting video:', _error);
+    throw _error;
   }
 }

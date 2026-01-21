@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AUTH } from '@/lib/constants';
-import { cacheUpdateCarOrder, cacheGet, CACHE_KEYS } from '@/lib/redis';
+import { cacheUpdateCarOrder } from '@/lib/redis';
 
 // PUT /api/cars/reorder - Update car display order
 export async function PUT(request: NextRequest) {
@@ -36,15 +36,10 @@ export async function PUT(request: NextRequest) {
     );
 
     await Promise.all(updatePromises);
-    console.log(`DB: Updated order for ${carIds.length} cars`);
-
-    // Check cache before updating
-    const cachedList = await cacheGet(CACHE_KEYS.CARS_LIST);
-    console.log(`Cache exists: ${!!cachedList}, items: ${cachedList?.length || 0}`);
+    console.warn(`DB: Updated order for ${carIds.length} cars`);
 
     // Update car order in cache without clearing entire list
-    const cacheUpdateResult = await cacheUpdateCarOrder(carIds);
-    console.log(`Cache update result: ${cacheUpdateResult}`);
+    await cacheUpdateCarOrder(carIds);
 
     return NextResponse.json({ 
       success: true, 

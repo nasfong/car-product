@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, deleteImage, saveVideo, deleteVideo } from '@/lib/storage';
-import { cacheGet, cacheSet, cacheDelete, cacheGetCarFromList, cacheUpdateCarInList, cacheDeleteCarFromList, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
+import { cacheGetCarFromList, cacheUpdateCarInList, cacheDeleteCarFromList } from '@/lib/redis';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ export async function GET(
     // Try to get from cached cars list first
     const cachedCar = await cacheGetCarFromList(id);
     if (cachedCar) {
-      console.log(`Returning car ${id} from CARS_LIST cache`);
+      console.warn(`Returning car ${id} from CARS_LIST cache`);
       return NextResponse.json(cachedCar);
     }
 
@@ -57,8 +57,8 @@ export async function PUT(
     let formData: FormData;
     try {
       formData = await request.formData();
-    } catch (error) {
-      const err = error as Error;
+    } catch (_error) {
+      const err = _error as Error;
       console.error('FormData parsing error:', err.message);
       // Only catch specific size-related errors
       if (err.message?.includes('Request body exceeded') ||
@@ -98,8 +98,8 @@ export async function PUT(
       try {
         const existingImages = JSON.parse(existingImagesStr) as string[];
         finalImages = [...existingImages];
-      } catch (e) {
-        console.error('Error parsing existing images:', e);
+      } catch (_e) {
+        console.error('Error parsing existing images:', _e);
       }
     }
 
@@ -142,8 +142,8 @@ export async function PUT(
       try {
         const existingVideos = JSON.parse(existingVideosStr) as string[];
         finalVideos = [...existingVideos];
-      } catch (e) {
-        console.error('Error parsing existing videos:', e);
+      } catch (_e) {
+        console.error('Error parsing existing videos:', _e);
       }
     }
 
@@ -197,7 +197,7 @@ export async function PUT(
     const createdAtDate = createdAtStr ? new Date(createdAtStr) : undefined;
 
     // Update car in database
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       price,
       transmission,
@@ -224,7 +224,7 @@ export async function PUT(
     });
 
     // Update cache: update car in list cache
-    console.log(`[PUT] Car ${id} updated in DB`);
+    console.warn(`[PUT] Car ${id} updated in DB`);
     const cacheUpdated = await cacheUpdateCarInList(updatedCar);
     if (!cacheUpdated) {
       console.warn(`[PUT] ⚠ Cache update failed for car ${id}, will be refreshed on next GET`);
@@ -297,7 +297,7 @@ export async function DELETE(
     await prisma.car.delete({
       where: { id },
     });
-    console.log(`[DELETE] Car ${id} deleted from DB`);
+    console.warn(`[DELETE] Car ${id} deleted from DB`);
 
     // Update cache: delete car from list cache
     const cacheDeleted = await cacheDeleteCarFromList(id);

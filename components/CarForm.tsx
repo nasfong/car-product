@@ -297,18 +297,24 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
     setActiveId(null);
     setDraggedImage(null);
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const activeId = active.id.toString();
     const overId = over.id.toString();
 
-    if (activeId === overId) return;
+    if (activeId === overId) {
+      return;
+    }
 
     const activeType = activeId.startsWith('existing-') ? 'existing' : 'new';
     const overType = overId.startsWith('existing-') ? 'existing' : 'new';
 
     // Only allow reordering within the same type for now
-    if (activeType !== overType) return;
+    if (activeType !== overType) {
+      return;
+    }
 
     const activeIndex = parseInt(activeId.split('-')[2]);
     const overIndex = parseInt(overId.split('-')[2]);
@@ -876,7 +882,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                 rows={4}
                 className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 touch-manipulation resize-none transition-all duration-200 bg-white hover:border-gray-300"
                 placeholder="ពិពណ៌នាលំអិតអំពីរថយន្តនេះ..."
-                onBlur={(e) => {
+                onBlur={() => {
                   // Ensure keyboard closes on blur
                   if (typeof window !== 'undefined') {
                     window.scrollTo(0, 0);
@@ -971,7 +977,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
                     : 'border-gray-300 bg-white'
                     }`}>
                     {formData.status === 3 && (
-                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                      <div className="w-2 h-2 rounded-full bg-white" />
                     )}
                   </div>
                   <span className={`text-base sm:text-sm font-medium ${formData.status === 3 ? 'text-red-700' : 'text-gray-700'

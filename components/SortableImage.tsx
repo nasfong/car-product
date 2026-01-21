@@ -76,7 +76,7 @@ const SortableImage = ({
       {/* Image */}
       <img
         src={image}
-        alt={`${isExisting ? 'Existing' : 'New'} ${index + 1}`}
+        alt={`${isExisting ? 'Existing' : 'New'} image ${index + 1}`}
         className="w-full h-24 object-cover rounded-lg border transition-all duration-200 hover:scale-105 pointer-events-none select-none"
         draggable={false}
         style={{

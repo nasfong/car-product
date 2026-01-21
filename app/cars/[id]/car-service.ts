@@ -32,7 +32,7 @@ async function getHostFromHeaders(): Promise<string | null> {
 
     const proto = headerList.get("x-forwarded-proto") || "https";
     return `${proto}://${host}`;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

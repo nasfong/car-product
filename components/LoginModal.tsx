@@ -39,7 +39,7 @@ function LoginModal({ onSuccess, onCancel }: LoginModalProps) {
       } else {
         setError(data.error || "Login failed");
       }
-    } catch (error) {
+    } catch (_error) {
       setError("Login failed. Please try again.");
     } finally {
       setLoading(false);

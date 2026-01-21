@@ -28,7 +28,7 @@ function buildSpecs(items: Array<string | undefined>): string {
 function getDisplayHost(url: string): string {
   try {
     return new URL(url).host;
-  } catch (error) {
+  } catch (_error) {
     return url.replace(/^https?:\/\//, "");
   }
 }

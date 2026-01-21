@@ -43,6 +43,9 @@ const eslintConfig = defineConfig([
       "react/require-render-return": "error",
       "react/self-closing-comp": "warn",
       
+      // Next.js Rules
+      "@next/next/no-img-element": "off",
+      
       // Code Style
       "eqeqeq": ["warn", "always"],
       "curly": ["warn", "all"],

@@ -35,17 +35,17 @@ interface HomeClientProps {
 
 export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, _startTransition] = useTransition();
   const { login, logout } = useAuth();
-  const [cars, setCars] = useState<any[]>([]);
+  const [cars, setCars] = useState<never[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCarId, setEditingCarId] = useState<string | undefined>();
   const [showLogin, setShowLogin] = useState(false);
   const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: "" });
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [draggedCar, setDraggedCar] = useState<any>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [draggedCar, setDraggedCar] = useState<never>(null);
+  const [_isDragging, setIsDragging] = useState(false);
   const bodyTouchActionRef = useRef<string | null>(null);
 
   // Fetch cars on client side
@@ -112,9 +112,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
   }, []);
 
   useEffect(() => {
-    return () => {
-      restoreBodyTouchInteractions();
-    };
+    restoreBodyTouchInteractions();
   }, [restoreBodyTouchInteractions]);
 
   const refreshCars = useCallback(async () => {
@@ -124,8 +122,8 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
         const data = await response.json();
         setCars(data || []);
       }
-    } catch (err) {
-      console.error('Error refreshing cars:', err);
+    } catch (_err) {
+      console.error('Error refreshing cars:', _err);
     }
   }, []);
 
@@ -171,9 +169,9 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
 
       // Optimistically update local state instead of refetching all cars
       setCars(prevCars => prevCars.filter(car => car.id !== carId));
-      console.log(`[HomeClient] Deleted car ${carId} from local state`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "មិនអាចលុបរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។";
+      console.warn(`[HomeClient] Deleted car ${carId} from local state`);
+    } catch (_error) {
+      const message = _error instanceof Error ? _error.message : "មិនអាចលុបរថយន្តបានទេ។ សូមពិនិត្យមើលះជាងវិញ។";
       setErrorDialog({
         isOpen: true,
         message
@@ -242,7 +240,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
     setDraggedCar(draggedCarData);
   }, [cars, disableBodyTouchInteractions]);
 
-  const syncCarOrder = useCallback(async (newOrder: any[], previousOrder: any[]) => {
+  const syncCarOrder = useCallback(async (newOrder: never[], previousOrder: never[]) => {
     try {
       const token = localStorage.getItem('admin-token');
       const response = await fetch('/api/cars/reorder', {
@@ -284,7 +282,9 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
 
     finalizeDrag();
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const previousOrder = [...cars];
     const activeIndex = previousOrder.findIndex(car => car.id === active.id);

@@ -1,19 +1,19 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function testConnection() {
   try {
-    console.log('🔄 Testing database connection...');
+    console.warn('🔄 Testing database connection...');
     
     // Try to connect and run a simple query
     await prisma.$connect();
-    console.log('✅ Database connected successfully!');
+    console.warn('✅ Database connected successfully!');
     
     // Test a simple query
     const result = await prisma.$queryRaw`SELECT current_database(), version()`;
-    console.log('✅ Query executed successfully');
-    console.log('📊 Database info:', result);
+    console.warn('✅ Query executed successfully');
+    console.warn('📊 Database info:', result);
     
     // Check if the cars table exists
     const tables = await prisma.$queryRaw`
@@ -22,7 +22,7 @@ async function testConnection() {
       WHERE table_schema = 'public' 
       AND table_type = 'BASE TABLE'
     `;
-    console.log('📋 Tables in database:', tables);
+    console.warn('📋 Tables in database:', tables);
     
     // Try to describe the cars table if it exists
     try {
@@ -32,23 +32,23 @@ async function testConnection() {
         WHERE table_name = 'cars'
         ORDER BY ordinal_position
       `;
-      console.log('🚗 Cars table columns:', columns);
+      console.warn('🚗 Cars table columns:', columns);
       
       if (columns.length === 0) {
-        console.log('⚠️  Cars table exists but has no columns or table name case mismatch');
+        console.warn('⚠️  Cars table exists but has no columns or table name case mismatch');
       }
-    } catch (error) {
-      console.log('⚠️  Error checking cars table:', error.message);
+    } catch (_error) {
+      console.warn('Error checking cars table:', (_error as Error).message);
     }
     
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
+  } catch (_error) {
+    console.error('❌ Database connection failed:', _error);
+    if (_error instanceof Error) {
+      console.error('Error message:', _error.message);
     }
   } finally {
     await prisma.$disconnect();
-    console.log('🔌 Disconnected from database');
+    console.warn('🔌 Disconnected from database');
   }
 }
 

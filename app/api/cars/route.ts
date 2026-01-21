@@ -17,7 +17,7 @@ export async function GET() {
     // Try to get from cache first
     const cachedCars = await cacheGet(CACHE_KEYS.CARS_LIST);
     if (cachedCars) {
-      console.log('Returning cars from cache');
+      console.warn('Returning cars from cache');
       return NextResponse.json(cachedCars);
     }
 
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     let formData: FormData;
     try {
       formData = await request.formData();
-    } catch (error) {
-      const err = error as Error;
+    } catch (_error) {
+      const err = _error as Error;
       console.error('FormData parsing error:', err.message);
       // Only catch specific size-related errors
       if (err.message?.includes('Request body exceeded') ||
@@ -135,9 +135,9 @@ export async function POST(request: NextRequest) {
     // Add new car to cache (if cache exists) or let next GET fetch from DB
     const cacheAdded = await cacheAddCarToList(car);
     if (cacheAdded) {
-      console.log(`[POST] ✓ Car ${car.id} added to Redis cache`);
+      console.warn(`[POST] Car ${car.id} added to Redis cache`);
     } else {
-      console.log(`[POST] ℹ Cache was empty, will be refreshed on next GET`);
+      console.warn(`[POST] Cache was empty, will be refreshed on next GET`);
     }
 
     return NextResponse.json(car, { status: 201 });

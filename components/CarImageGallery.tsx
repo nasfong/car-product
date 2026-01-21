@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, memo, useMemo } from 'react';
-import Image from 'next/image';
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -48,16 +47,22 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
     }
 
     // If we've already tried to generate for this URL, don't try again
-    if (hasGeneratedRef.current) return;
+    if (hasGeneratedRef.current) {
+      return;
+    }
 
     const generateThumbnail = async () => {
-      if (!videoRef.current || !canvasRef.current) return;
+      if (!videoRef.current || !canvasRef.current) {
+        return;
+      }
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
 
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
 
       const handleLoadedData = () => {
         // Set video to 5 seconds or 10% of duration, whichever is smaller
@@ -75,9 +80,9 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
           ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
           // Convert canvas to blob and create URL
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
+          canvas.toBlob((_blob) => {
+            if (_blob) {
+              const url = URL.createObjectURL(_blob);
               // Cache the thumbnail
               thumbnailCache.set(videoUrl, url);
               setThumbnailUrl(url);
@@ -85,8 +90,8 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
               hasGeneratedRef.current = true;
             }
           }, 'image/jpeg', 0.8);
-        } catch (error) {
-          console.error('Error generating thumbnail:', error);
+        } catch (_error) {
+          console.error('Error generating thumbnail:', _error);
           setIsLoading(false);
           hasGeneratedRef.current = true;
         }
@@ -426,9 +431,9 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           },
         }}
         render={{
-          slide: ({ slide }: any) => {
+          slide: ({ slide }: Record<string, unknown>) => {
             // Find the corresponding slide in our internal array to check if it's a video
-            const slideIndex = slides.findIndex(s => s.src === slide.src);
+            const slideIndex = slides.findIndex(s => s.src === (slide as Record<string, unknown>).src);
             const internalSlide = slides[slideIndex];
 
             if (internalSlide && internalSlide.type === 'video') {
