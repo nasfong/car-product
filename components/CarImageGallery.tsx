@@ -322,7 +322,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               ) : (
                 // Image thumbnail
                 <img
-                  src={slide.src}
+                  src={(slide as any).src}
                   alt={`${carName} - Thumbnail ${index + 2}`}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
@@ -431,16 +431,17 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           },
         }}
         render={{
-          slide: ({ slide }: Record<string, unknown>) => {
+          slide: (props) => {
+            const { slide } = props;
             // Find the corresponding slide in our internal array to check if it's a video
-            const slideIndex = slides.findIndex(s => s.src === (slide as Record<string, unknown>).src);
+            const slideIndex = slides.findIndex(s => s.src === (slide as any).src);
             const internalSlide = slides[slideIndex];
 
             if (internalSlide && internalSlide.type === 'video') {
               return (
                 <div className="yarl__slide">
                   <video
-                    src={slide.src}
+                    src={(slide as any).src}
                     controls
                     loop
                     muted={false}
