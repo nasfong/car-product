@@ -113,7 +113,7 @@ export const cacheGetCarFromList = async (carId: string) => {
     if (!cars || !Array.isArray(cars)) {
       return null;
     }
-    return cars.find((car: never) => car.id === carId) || null;
+    return cars.find((car: any) => car.id === carId) || null;
   } catch (_error) {
     console.error(`Cache get car from list error for ID ${carId}:`, _error);
     return null;

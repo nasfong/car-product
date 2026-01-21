@@ -38,7 +38,7 @@ async function testConnection() {
         console.warn('⚠️  Cars table exists but has no columns or table name case mismatch');
       }
     } catch (_error) {
-      console.warn('Error checking cars table:', (_error as Error).message);
+      console.warn('Error checking cars table:', _error && _error.message ? _error.message : _error);
     }
     
   } catch (_error) {
