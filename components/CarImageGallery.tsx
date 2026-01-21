@@ -322,7 +322,7 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               ) : (
                 // Image thumbnail
                 <img
-                  src={(slide as any).src}
+                  src={(slide as { src: string }).src}
                   alt={`${carName} - Thumbnail ${index + 2}`}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
@@ -434,14 +434,16 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
           slide: (props) => {
             const { slide } = props;
             // Find the corresponding slide in our internal array to check if it's a video
-            const slideIndex = slides.findIndex(s => s.src === (slide as any).src);
+            // @ts-expect-error: slide may be a union type, but we only care about .src here
+            const slideIndex = slides.findIndex(s => s.src === slide.src);
             const internalSlide = slides[slideIndex];
 
             if (internalSlide && internalSlide.type === 'video') {
               return (
                 <div className="yarl__slide">
                   <video
-                    src={(slide as any).src}
+                    // @ts-expect-error: slide may be a union type, but we only care about .src here
+                    src={slide.src}
                     controls
                     loop
                     muted={false}

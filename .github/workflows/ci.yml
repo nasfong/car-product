@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, develop ]
 
@@ -60,6 +62,7 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout code
@@ -68,28 +71,25 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub (if credentials available)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: car-product:latest
+      - name: Build and push from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          make build TAG=${TAG_NAME}
+          make push TAG=${TAG_NAME}
+          docker tag nasfong/car-product:${TAG_NAME} nasfong/car-product:latest
+          docker push nasfong/car-product:latest
 
-      - name: Build and push Docker image (main branch only)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/car-product:latest
-            ${{ secrets.DOCKER_USERNAME }}/car-product:${{ github.sha }}
+      - name: Build and push from main branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          make build TAG=${{ github.sha }}
+          make push TAG=${{ github.sha }}
+          docker tag nasfong/car-product:${{ github.sha }} nasfong/car-product:latest
+          docker push nasfong/car-product:latest
