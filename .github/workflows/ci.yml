@@ -83,5 +83,3 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           make build TAG=${TAG_NAME}
           make push TAG=${TAG_NAME}
-          docker tag nasfong/car-product:${TAG_NAME} nasfong/car-product:latest
-          docker push nasfong/car-product:latest
