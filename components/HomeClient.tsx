@@ -238,7 +238,7 @@ export default function HomeClient({ isAuthenticatedOnServer }: HomeClientProps)
 
     // Find the dragged car for overlay
     const draggedCarData = cars.find(car => car.id === active.id);
-    setDraggedCar(draggedCarData);
+    setDraggedCar(draggedCarData ?? null);
   }, [cars, disableBodyTouchInteractions]);
 
   const syncCarOrder = useCallback(async (newOrder: Car[], previousOrder: Car[]) => {

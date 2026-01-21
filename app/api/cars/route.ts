@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         );
       }
       // Re-throw other errors to see what's actually happening
-      console.error('Unexpected FormData error:', error);
+      console.error('Unexpected FormData error:', err);
       return NextResponse.json(
         { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
         { status: 400 }
