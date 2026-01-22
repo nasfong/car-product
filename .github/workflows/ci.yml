@@ -1,11 +1,8 @@
-name: CI/CD Pipeline
+name: Lighthouse Performance
 
 on:
   push:
     branches: [ main, develop ]
-    tags:
-      - 'v*'
-      - '[0-9]*'
   pull_request:
     branches: [ main, develop ]
 
@@ -49,35 +46,29 @@ jobs:
       - name: Run Lighthouse
         run: npm run lighthouse:ci
 
-      - name:       - name: Run Lighthouse
-        run: npm run lighthouse:ci
-      
       - name: Comment results on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const reports = JSON.parse(fs.readFileSync('./.lighthouseci/results.json', 'utf8'));
-            const report = reports[0];
-            const scores = report.categories;
-            
-            const comment = `## 📊 Lighthouse Report
-      | Metric | Score |
-      |--------|-------|
-      | Performance | ${Math.round(scores.performance.score * 100)} |
-      | Accessibility | ${Math.round(scores.accessibility.score * 100)} |
-      | Best Practices | ${Math.round(scores['best-practices'].score * 100)} |
-      | SEO | ${Math.round(scores.seo.score * 100)} |
-      
-      [Full Report](${report.reportUrl})`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+            try {
+              const reports = JSON.parse(fs.readFileSync('./.lighthouseci/results.json', 'utf8'));
+              const report = reports[0];
+              const scores = report.categories;
+              const comment = `## 📊 Lighthouse Report\n\n| Metric | Score |\n|--------|-------|\n| Performance | ${Math.round(scores.performance.score * 100)}/100 |\n| Accessibility | ${Math.round(scores.accessibility.score * 100)}/100 |\n| Best Practices | ${Math.round(scores['best-practices'].score * 100)}/100 |\n| SEO | ${Math.round(scores.seo.score * 100)}/100 |`;
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (e) {
+              console.log('Report not found');
+            }
+
+      - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
