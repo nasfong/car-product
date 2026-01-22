@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Car } from "@/lib/types";
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -18,11 +18,19 @@ interface CarCardProps {
 function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, showDragHandle = false, isOverlay = false }: CarCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [maxImageIndex, setMaxImageIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const widthCacheRef = useRef<number | null>(null);
 
-  // Scroll handler to update current image index
+  // Scroll handler to update current image index - optimized to avoid forced reflow
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const scrollLeft = e.currentTarget.scrollLeft;
-    const itemWidth = e.currentTarget.offsetWidth;
+    
+    // Cache width to avoid repeated reads (which cause forced reflow)
+    if (widthCacheRef.current === null) {
+      widthCacheRef.current = e.currentTarget.offsetWidth;
+    }
+    
+    const itemWidth = widthCacheRef.current;
     const newIndex = Math.round(scrollLeft / itemWidth);
 
     // Only update if index changed
@@ -135,6 +143,10 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
                         alt={`${car.name} - Image ${index + 1}`}
                         className="object-cover pointer-events-none w-full h-full"
                         loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        width={1024}
+                        height={768}
                         draggable={false}
                       />
                     ) : (

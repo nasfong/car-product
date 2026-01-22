@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
   
   serverExternalPackages: ['@prisma/client'],
   
+  // Next.js 16 uses SWC by default for minification
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Production optimizations
+      config.optimization = {
+        ...config.optimization,
+        minimize: true,
+      };
+    }
+    return config;
+  },
+  
   images: {
     remotePatterns: [
       {
@@ -76,6 +88,25 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Cache HTML pages (ISR with 60s revalidation)
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=60, stale-while-revalidate=120'
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=60, stale-while-revalidate=120'
+          },
+        ],
+      },
       // Security headers for production
       ...(process.env.NODE_ENV === 'production' ? [
         {
@@ -104,6 +135,10 @@ const nextConfig: NextConfig = {
             {
               key: 'Referrer-Policy',
               value: 'origin-when-cross-origin'
+            },
+            {
+              key: 'Accept-Encoding',
+              value: 'gzip, deflate, br'
             },
           ],
         }

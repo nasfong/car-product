@@ -9,7 +9,11 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:test": "node scripts/test-db-connection.js"
+    "db:test": "node scripts/test-db-connection.js",
+    "lighthouse": "lighthouse http://localhost:3000 --config-path=./lighthouse.config.js --output=html --output-path=./lighthouse/report.html",
+    "lighthouse:ci": "lhci autorun",
+    "lighthouse:json": "lighthouse http://localhost:3000 --config-path=./lighthouse.config.js --output=json --output-path=./lighthouse/report.json",
+    "performance": "npm run build && npm run start & sleep 3 && npm run lighthouse && kill $!"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -28,6 +32,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@prisma/client": "^6.19.0",
     "@tailwindcss/postcss": "^4",
     "@types/js-cookie": "^3.0.6",
@@ -37,6 +42,7 @@
     "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
+    "lighthouse": "^12.8.2",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
     "typescript": "^5"

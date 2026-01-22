@@ -59,6 +59,103 @@ jobs:
           path: .next
           retention-days: 1
 
+  lighthouse:
+    name: Lighthouse Performance Testing
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Start Next.js production server
+        run: |
+          npm start > /tmp/server.log 2>&1 &
+          sleep 5
+          echo "Server started"
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Server is ready"
+              exit 0
+            fi
+            echo "Waiting for server... attempt $i/30"
+            sleep 1
+          done
+          echo "Server failed to start"
+          cat /tmp/server.log
+          exit 1
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: './lighthouserc.json'
+          temporaryPublicStorage: true
+          runs: 3
+          uploadArtifacts: true
+
+      - name: Comment PR with Lighthouse results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const lighthouseReport = fs.existsSync('./.lighthouseci/results.json') 
+              ? JSON.parse(fs.readFileSync('./.lighthouseci/results.json', 'utf8'))
+              : null;
+            
+            if (!lighthouseReport || !lighthouseReport[0]) {
+              console.log('No Lighthouse report found');
+              return;
+            }
+            
+            const report = lighthouseReport[0];
+            const scores = {
+              performance: Math.round((report.categories.performance?.score || 0) * 100),
+              accessibility: Math.round((report.categories.accessibility?.score || 0) * 100),
+              'best-practices': Math.round((report.categories['best-practices']?.score || 0) * 100),
+              seo: Math.round((report.categories.seo?.score || 0) * 100),
+            };
+            
+            const scoreColor = (score) => {
+              if (score >= 90) return '🟢';
+              if (score >= 75) return '🟡';
+              return '🔴';
+            };
+            
+            const comment = `## 🚀 Lighthouse Performance Report
+            
+| Category | Score |
+|----------|-------|
+| ${scoreColor(scores.performance)} Performance | ${scores.performance}/100 |
+| ${scoreColor(scores.accessibility)} Accessibility | ${scores.accessibility}/100 |
+| ${scoreColor(scores['best-practices'])} Best Practices | ${scores['best-practices']}/100 |
+| ${scoreColor(scores.seo)} SEO | ${scores.seo}/100 |
+
+[View detailed report](${report.reportUrl || 'https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/'})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+
   docker:
     name: Build Docker Image
     runs-on: ubuntu-latest

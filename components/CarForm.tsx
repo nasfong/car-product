@@ -143,9 +143,9 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
 
   // Prevent background scroll when modal is open
   useEffect(() => {
-    // Save current overflow style
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    const originalPosition = window.getComputedStyle(document.body).position;
+    // Save current overflow style (avoid getComputedStyle to prevent forced reflow)
+    const originalStyle = document.body.style.overflow || 'auto';
+    const originalPosition = document.body.style.position || 'static';
 
     // Prevent background scroll on all devices
     document.body.style.overflow = 'hidden';
@@ -175,10 +175,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       const target = e.target as HTMLInputElement | HTMLTextAreaElement;
       setTimeout(() => {
         target.blur();
-        // Force document scroll to ensure keyboard closes
-        if (typeof window !== 'undefined') {
-          document.body.scrollTop = document.body.scrollTop;
-        }
+        // Keyboard will close automatically, no need to force scroll
       }, 0);
       const form = e.currentTarget.closest('form');
       if (form) {
@@ -339,12 +336,7 @@ function CarForm({ carId, onSuccess, onCancel }: CarFormProps) {
       inputs.forEach(input => {
         (input as HTMLInputElement).blur();
       });
-      // Force document scroll to trigger keyboard close on iOS
-      if (typeof window !== 'undefined') {
-        document.body.scrollTop = document.body.scrollTop;
-        // For iOS Safari, also try scrolling to top
-        window.scrollTo(0, 0);
-      }
+      // Blur handling is sufficient to close keyboard on iOS
     }, 50);
     
     setLoading(true);

@@ -40,7 +40,7 @@ ${typeof window !== 'undefined' ? window.location.origin : ''}/cars/${car.id}
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">ទំនាក់ទំនងអ្នកលក់</h3>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">ទំនាក់ទំនងអ្នកលក់</h2>
       <div className="space-y-3">
         <button
           onClick={handleContactClick}

@@ -141,10 +141,10 @@ export default async function CarDetailPage({
 
             {car.description && (
               <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   ការពិពណ៌នា
-                </h3>
+                </h2>
                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                   {car.description}
                 </p>
@@ -154,7 +154,7 @@ export default async function CarDetailPage({
             <ContactButtons car={car} />
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">ព័ត៌មានលម្អិត</h3>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">ព័ត៌មានលម្អិត</h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">ប្រអប់លេខ:</span>

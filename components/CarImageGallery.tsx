@@ -258,6 +258,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
               alt={`${carName} - Main Image`}
               className="absolute inset-0 w-full h-full object-cover"
               loading="eager"
+              fetchPriority="high"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 70vw"
+              width={1809}
+              height={1358}
             />
             {/* Zoom Icon Overlay for Image */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
@@ -326,6 +330,10 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
                   alt={`${carName} - Thumbnail ${index + 2}`}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
+                  fetchPriority="low"
+                  sizes="(max-width: 640px) 25vw, (max-width: 1024px) 20vw, 16vw"
+                  width={400}
+                  height={400}
                 />
               )}
               {/* Hover Overlay */}
