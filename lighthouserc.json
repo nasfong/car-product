@@ -1,7 +1,10 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/"],
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/cars/cmkcny7m40000lu01k2fl8cso"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "configPath": "./lighthouse.config.js"
