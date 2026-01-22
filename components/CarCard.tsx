@@ -18,7 +18,6 @@ interface CarCardProps {
 function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, showDragHandle = false, isOverlay = false }: CarCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [maxImageIndex, setMaxImageIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const widthCacheRef = useRef<number | null>(null);
 
   // Scroll handler to update current image index - optimized to avoid forced reflow

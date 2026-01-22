@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, deleteImage, saveVideo, deleteVideo } from '@/lib/storage';
 import { cacheGetCarFromList, cacheUpdateCarInList, cacheDeleteCarFromList } from '@/lib/redis';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-middleware';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     // Try to get from cached cars list first
     const cachedCar = await cacheGetCarFromList(id);
     if (cachedCar) {
@@ -50,6 +51,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  if (!requireAdmin(request)) {
+    return unauthorizedResponse();
+  }
+
   try {
     const { id } = await params;
 
@@ -212,7 +218,7 @@ export async function PUT(
       tiktokUrl: tiktokUrl || null,
       status,
     };
-    
+
     // Only update createdAt if provided
     if (createdAtDate) {
       updateData.createdAt = createdAtDate;
@@ -242,11 +248,18 @@ export async function PUT(
   }
 }
 
-// DELETE /api/cars/[id] - Delete a car
+
+
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+
+  if (!requireAdmin(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const { id } = await params;
     const car = await prisma.car.findUnique({

@@ -44,7 +44,7 @@ export default function HomeServer({ isAuthenticatedOnServer, initialCars }: Hom
   const [errorDialog, setErrorDialog] = useState({ isOpen: false, message: "" });
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draggedCar, setDraggedCar] = useState<Car | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [_, setIsDragging] = useState(false);
   const bodyTouchActionRef = useRef<string | null>(null);
 
   const disableBodyTouchInteractions = useCallback(() => {

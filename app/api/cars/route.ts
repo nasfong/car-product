@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { saveImage, saveVideo } from '@/lib/storage';
 import { cacheGet, cacheSet, cacheAddCarToList, CACHE_KEYS, CACHE_EXPIRY_TIME } from '@/lib/redis';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-middleware';
 
 // Configure route for large file uploads
 export const runtime = 'nodejs';
@@ -44,6 +45,11 @@ export async function GET() {
 
 // POST /api/cars - Create a new car
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  if (!requireAdmin(request)) {
+    return unauthorizedResponse();
+  }
+
   try {
     // Parse form data with error handling for large uploads
     let formData: FormData;

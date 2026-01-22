@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { AUTH } from '@/lib/constants';
 import { cacheUpdateCarOrder } from '@/lib/redis';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-middleware';
 
 // PUT /api/cars/reorder - Update car display order
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  if (!requireAdmin(request)) {
+    return unauthorizedResponse();
+  }
+
   try {
-    // Check authorization
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token || token !== AUTH.admin.token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
 
     const body = await request.json();
     const { carIds } = body;
