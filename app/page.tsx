@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import HomeServer from "@/components/HomeServer";
 import { CONTACT, STORE } from "@/lib/constants";
-import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 
 // Revalidate every 60 seconds for ISR (Incremental Static Regeneration)
@@ -44,16 +43,6 @@ async function getCars() {
   }
 }
 
-// Loading component for Suspense
-function CarsLoading() {
-  return (
-    <div className="text-center py-20">
-      <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
-      <p className="mt-4 text-gray-600">កំពុងផ្ទុក...</p>
-    </div>
-  );
-}
-
 // Server Component
 export default async function Home() {
   const [isAuthenticatedOnServer, cars] = await Promise.all([
@@ -64,12 +53,10 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50">
       <div className="flex-1">
-        <Suspense fallback={<CarsLoading />}>
           <HomeServer
             isAuthenticatedOnServer={isAuthenticatedOnServer}
             initialCars={cars}
           />
-        </Suspense>
       </div>
 
       {/* Footer */}

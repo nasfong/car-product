@@ -9,7 +9,6 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:test": "node scripts/test-db-connection.js",
     "lighthouse": "lighthouse http://localhost:3000 --config-path=./lighthouse.config.js --output=html --output-path=./lighthouse/report.html",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:json": "lighthouse http://localhost:3000 --config-path=./lighthouse.config.js --output=json --output-path=./lighthouse/report.json",
