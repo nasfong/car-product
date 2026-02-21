@@ -34,7 +34,7 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
     if (REDIS_URL.startsWith('rediss://')) {
       socketConfig.tls = true;
       socketConfig.rejectUnauthorized = false;
-      socketConfig.servername = 'redis.nasfong.site'; // Required for SNI
+      socketConfig.servername = 'redis.nasfong.com'; // Required for SNI
     }
 
     redisClient = createClient({

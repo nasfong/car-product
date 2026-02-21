@@ -2,7 +2,7 @@ import { Client } from 'minio';
 
 // MinIO client configuration
 export const minioClient = new Client({
-  endPoint: process.env.MINIO_ENDPOINT || 'minio-api.nasfong.site',
+  endPoint: process.env.MINIO_ENDPOINT || 'minio-api.nasfong.com',
   port: parseInt(process.env.MINIO_PORT || '443'),
   useSSL: process.env.MINIO_USE_SSL !== 'false',
   accessKey: process.env.MINIO_ACCESS_KEY || '',
@@ -86,12 +86,12 @@ export function getMinioUrl(fileName: string): string {
   const publicUrl = process.env.MINIO_PUBLIC_URL;
   
   if (publicUrl) {
-    // MINIO_PUBLIC_URL already includes protocol (https://minio-api.nasfong.site)
+    // MINIO_PUBLIC_URL already includes protocol (https://minio-api.nasfong.com)
     return `${publicUrl}/${BUCKET_NAME}/${fileName}`;
   }
   
   // Fallback for local dev without MINIO_PUBLIC_URL
-  const endpoint = process.env.MINIO_ENDPOINT || 'minio-api.nasfong.site';
+  const endpoint = process.env.MINIO_ENDPOINT || 'minio-api.nasfong.com';
   const useSSL = process.env.MINIO_USE_SSL !== 'false';
   const protocol = useSSL ? 'https' : 'http';
   return `${protocol}://${endpoint}/${BUCKET_NAME}/${fileName}`;

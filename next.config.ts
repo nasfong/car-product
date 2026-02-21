@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cdn.nasfong.site',
+        hostname: 'cdn.nasfong.com',
       },
     ],
     formats: ['image/avif', 'image/webp'],

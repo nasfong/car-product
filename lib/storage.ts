@@ -81,7 +81,7 @@ export async function deleteImage(imageUrl: string): Promise<void> {
     console.warn('Deleting image with URL:', imageUrl);
     
     // Extract filename from URL
-    // URL format: https://minio-api.nasfong.site/car-images/cars/123456-abc.jpg
+    // URL format: https://minio-api.nasfong.com/car-images/cars/123456-abc.jpg
     const url = new URL(imageUrl);
     const pathname = url.pathname;
     
@@ -120,7 +120,7 @@ export async function deleteVideo(videoUrl: string): Promise<void> {
     console.warn('Deleting video with URL:', videoUrl);
     
     // Extract filename from URL
-    // URL format: https://minio-api.nasfong.site/car-images/cars/123456-abc.mp4
+    // URL format: https://minio-api.nasfong.com/car-images/cars/123456-abc.mp4
     const url = new URL(videoUrl);
     const pathname = url.pathname;
     

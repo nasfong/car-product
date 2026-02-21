@@ -19,7 +19,7 @@ services:
       MINIO_BUCKET_NAME: car-images
 
       # Public URL for database storage (what users will download)
-      MINIO_PUBLIC_URL: https://cdn.nasfong.site
+      MINIO_PUBLIC_URL: https://cdn.nasfong.com
       
       # Analytic
       NEXT_PUBLIC_GA_MEASUREMENT_ID: G-VTVSE157MQ
@@ -36,7 +36,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       # --- Router ---
-      - "traefik.http.routers.car.rule=Host(`zato.nasfong.site`)"
+      - "traefik.http.routers.car.rule=Host(`zato.nasfong.com`)"
       - "traefik.http.routers.car.entrypoints=websecure"
       - "traefik.http.routers.car.tls.certresolver=letsencrypt"
       # --- Service ---
