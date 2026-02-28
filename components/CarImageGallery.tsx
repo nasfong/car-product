@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, memo, useMemo } from 'react';
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -39,10 +39,8 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
     // If we already have a cached thumbnail, use it
     const cachedThumbnail = thumbnailCache.get(videoUrl);
     if (cachedThumbnail) {
-      Promise.resolve().then(() => {
-        setThumbnailUrl(cachedThumbnail);
-        setIsLoading(false);
-      });
+      setThumbnailUrl(cachedThumbnail);
+      setIsLoading(false);
       return;
     }
 
@@ -51,65 +49,58 @@ const VideoThumbnailComponent = memo(function VideoThumbnailComponent({ videoUrl
       return;
     }
 
-    const generateThumbnail = async () => {
-      if (!videoRef.current || !canvasRef.current) {
-        return;
-      }
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
 
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      if (!ctx) {
-        return;
-      }
+    // Track the blob URL created so we can revoke it on unmount if not cached
+    let createdBlobUrl: string | null = null;
 
-      const handleLoadedData = () => {
-        // Set video to 5 seconds or 10% of duration, whichever is smaller
-        const targetTime = Math.min(5, video.duration * 0.1);
-        video.currentTime = targetTime;
-      };
-
-      const handleSeeked = () => {
-        try {
-          // Set canvas dimensions to match video
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-
-          // Draw the current video frame
-          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-
-          // Convert canvas to blob and create URL
-          canvas.toBlob((_blob) => {
-            if (_blob) {
-              const url = URL.createObjectURL(_blob);
-              // Cache the thumbnail
-              thumbnailCache.set(videoUrl, url);
-              setThumbnailUrl(url);
-              setIsLoading(false);
-              hasGeneratedRef.current = true;
-            }
-          }, 'image/jpeg', 0.8);
-        } catch (_error) {
-          console.error('Error generating thumbnail:', _error);
-          setIsLoading(false);
-          hasGeneratedRef.current = true;
-        }
-      };
-
-      video.addEventListener('loadeddata', handleLoadedData);
-      video.addEventListener('seeked', handleSeeked);
-
-      // Start loading the video
-      video.load();
-
-      return () => {
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.removeEventListener('seeked', handleSeeked);
-      };
+    const handleLoadedData = () => {
+      // Set video to 5 seconds or 10% of duration, whichever is smaller
+      const targetTime = Math.min(5, video.duration * 0.1);
+      video.currentTime = targetTime;
     };
 
-    generateThumbnail();
+    const handleSeeked = () => {
+      try {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            createdBlobUrl = url;
+            thumbnailCache.set(videoUrl, url);
+            setThumbnailUrl(url);
+            setIsLoading(false);
+            hasGeneratedRef.current = true;
+          }
+        }, 'image/jpeg', 0.8);
+      } catch (_error) {
+        console.error('Error generating thumbnail:', _error);
+        setIsLoading(false);
+        hasGeneratedRef.current = true;
+      }
+    };
+
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('seeked', handleSeeked);
+    video.load();
+
+    return () => {
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('seeked', handleSeeked);
+      // Revoke blob URL only if it was not stored in the persistent cache
+      // (i.e. component unmounted before generation completed)
+      if (createdBlobUrl && !thumbnailCache.has(videoUrl)) {
+        URL.revokeObjectURL(createdBlobUrl);
+      }
+    };
   }, [videoUrl]);
 
   return (
@@ -200,27 +191,11 @@ export default function CarImageGallery({ images, videos = [], carName }: CarIma
   ], [images, videos, carName]);
 
   // Handle video auto-play when slide changes
-  const handleSlideChange = ({ index }: { index: number }) => {
+  // Note: actual playback is handled by the onLoadedData callback in the render prop
+  // to avoid fragile DOM queries with setTimeout
+  const handleSlideChange = useCallback(({ index }: { index: number }) => {
     setCurrentIndex(index);
-
-    // Pause all videos first
-    setTimeout(() => {
-      const allVideos = document.querySelectorAll('.yarl__slide video') as NodeListOf<HTMLVideoElement>;
-      allVideos.forEach(video => {
-        video.pause();
-      });
-
-      // Auto-play video only if current slide is a video
-      if (slides[index]?.type === 'video') {
-        const currentVideo = document.querySelector('.yarl__slide video') as HTMLVideoElement;
-        if (currentVideo) {
-          currentVideo.play().catch(() => {
-            // Handle auto-play restrictions
-          });
-        }
-      }
-    }, 100);
-  };
+  }, []);
 
   const openLightbox = (index: number) => {
     setCurrentIndex(index);

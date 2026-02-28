@@ -111,33 +111,31 @@ export async function PUT(
 
 
 
-    // Handle new image uploads
-    const newImageFiles = formData.getAll('images') as File[];
+    // Handle new image uploads in parallel
+    const newImageFiles = (formData.getAll('images') as File[]).filter(f => f.size > 0 && f.name);
     if (newImageFiles.length > 0) {
-      for (const file of newImageFiles) {
-        if (file.size > 0 && file.name) {
+      const newImageUrls = await Promise.all(
+        newImageFiles.map(async (file) => {
           const bytes = await file.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const imageUrl = await saveImage(buffer, file.name);
-          finalImages.push(imageUrl);
-        }
-      }
+          return saveImage(buffer, file.name);
+        })
+      );
+      finalImages.push(...newImageUrls);
     }
 
-    // Delete removed images (compare with existing car images)
-    const removedImages = (existingCar.images || []).filter(img => !finalImages.includes(img));
-    for (const removedImg of removedImages) {
-      try {
-        await deleteImage(removedImg);
-      } catch (error) {
-        const err = error as Error;
-        console.warn('Failed to delete image:', removedImg, error);
-        return NextResponse.json(
-          { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
-          { status: 400 }
-        );
-      }
-    }
+    // Delete removed images in parallel (compare with existing car images)
+    const removedImages = (existingCar.images as string[] || []).filter((img: string) => !finalImages.includes(img));
+    await Promise.all(
+      removedImages.map(async (removedImg: string) => {
+        try {
+          await deleteImage(removedImg);
+        } catch (error) {
+          // Log but don't fail the update if image deletion fails
+          console.error('Failed to delete image:', removedImg, error);
+        }
+      })
+    );
 
     // Handle video updates
     let finalVideos: string[] = [];
@@ -153,39 +151,38 @@ export async function PUT(
       }
     }
 
-    // Handle new video uploads
-    const newVideoFiles = formData.getAll('videos') as File[];
+    // Handle new video uploads in parallel
+    const newVideoFiles = (formData.getAll('videos') as File[]).filter(f => f.size > 0 && f.name);
+    const oversizedVideo = newVideoFiles.find(f => f.size > 200 * 1024 * 1024);
+    if (oversizedVideo) {
+      return NextResponse.json(
+        { error: `វីដេអោ ${oversizedVideo.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
+        { status: 400 }
+      );
+    }
     if (newVideoFiles.length > 0) {
-      for (const file of newVideoFiles) {
-        if (file.size > 0 && file.name) {
-          if (file.size > 200 * 1024 * 1024) { // 200MB limit
-            return NextResponse.json(
-              { error: `វីដេអោ ${file.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
-              { status: 400 }
-            );
-          }
+      const newVideoUrls = await Promise.all(
+        newVideoFiles.map(async (file) => {
           const bytes = await file.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const videoUrl = await saveVideo(buffer, file.name);
-          finalVideos.push(videoUrl);
-        }
-      }
+          return saveVideo(buffer, file.name);
+        })
+      );
+      finalVideos.push(...newVideoUrls);
     }
 
-    // Delete removed videos (compare with existing car videos)
-    const removedVideos = (existingCar.videos || []).filter(vid => !finalVideos.includes(vid));
-    for (const removedVid of removedVideos) {
-      try {
-        await deleteVideo(removedVid);
-      } catch (error) {
-        const err = error as Error;
-        console.warn('Failed to delete video:', removedVid, error);
-        return NextResponse.json(
-          { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
-          { status: 400 }
-        );
-      }
-    }
+    // Delete removed videos in parallel (compare with existing car videos)
+    const removedVideos = (existingCar.videos as string[] || []).filter((vid: string) => !finalVideos.includes(vid));
+    await Promise.all(
+      removedVideos.map(async (removedVid: string) => {
+        try {
+          await deleteVideo(removedVid);
+        } catch (error) {
+          // Log but don't fail the update if video deletion fails
+          console.error('Failed to delete video:', removedVid, error);
+        }
+      })
+    );
 
     // Parse and validate form data
     const name = formData.get('name') as string;
@@ -230,10 +227,10 @@ export async function PUT(
     });
 
     // Update cache: update car in list cache
-    console.warn(`[PUT] Car ${id} updated in DB`);
+    console.log(`[PUT] Car ${id} updated in DB`);
     const cacheUpdated = await cacheUpdateCarInList(updatedCar);
     if (!cacheUpdated) {
-      console.warn(`[PUT] ⚠ Cache update failed for car ${id}, will be refreshed on next GET`);
+      console.log(`[PUT] Cache update failed for car ${id}, will be refreshed on next GET`);
     }
 
     return NextResponse.json(updatedCar);
@@ -273,49 +270,35 @@ export async function DELETE(
       );
     }
 
-    // Delete all images from MinIO storage
-    if (car.images && car.images.length > 0) {
-      for (const image of car.images) {
+    // Delete all images and videos from MinIO storage in parallel
+    // Errors are logged but don't block the DB deletion
+    await Promise.all([
+      ...(car.images as string[] ?? []).map(async (image: string) => {
         try {
           await deleteImage(image);
         } catch (error) {
-          const err = error as Error;
-          console.error('Failed to delete image:', err.message);
-          NextResponse.json(
-            { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
-            { status: 400 }
-          );
-          // Don't throw error here, continue with deletion process
+          console.error('Failed to delete image during car deletion:', image, error);
         }
-      }
-    }
-
-    // Delete all videos from MinIO storage
-    if (car.videos && car.videos.length > 0) {
-      for (const video of car.videos) {
+      }),
+      ...(car.videos as string[] ?? []).map(async (video: string) => {
         try {
           await deleteVideo(video);
         } catch (error) {
-          const err = error as Error;
-          console.error('Failed to delete video:', err.message);
-          NextResponse.json(
-            { error: `មិនអាចដំណើរការទិន្នន័យបាន: ${err.message}` },
-            { status: 400 }
-          );
+          console.error('Failed to delete video during car deletion:', video, error);
         }
-      }
-    }
+      }),
+    ]);
 
     // Delete car from database
     await prisma.car.delete({
       where: { id },
     });
-    console.warn(`[DELETE] Car ${id} deleted from DB`);
+    console.log(`[DELETE] Car ${id} deleted from DB`);
 
     // Update cache: delete car from list cache
     const cacheDeleted = await cacheDeleteCarFromList(id);
     if (!cacheDeleted) {
-      console.warn(`[DELETE] ⚠ Cache deletion failed for car ${id}, will be refreshed on next GET`);
+      console.log(`[DELETE] Cache deletion failed for car ${id}, will be refreshed on next GET`);
     }
 
     return NextResponse.json({ message: 'លុបរថយន្តចេញដោយជោគជ័យ។' });

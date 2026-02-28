@@ -18,7 +18,7 @@ export async function GET() {
     // Try to get from cache first
     const cachedCars = await cacheGet(CACHE_KEYS.CARS_LIST);
     if (cachedCars) {
-      console.warn('Returning cars from cache');
+      console.log('Returning cars from cache');
       return NextResponse.json(cachedCars);
     }
 
@@ -77,40 +77,40 @@ export async function POST(request: NextRequest) {
 
     // Get image files
     const imageFiles = formData.getAll('images') as File[];
-    const imageUrls: string[] = [];
 
-    if (imageFiles.length > 0) {
-      for (const file of imageFiles) {
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const imageUrl = await saveImage(buffer, file.name);
-        imageUrls.push(imageUrl);
-      }
-    } else {
+    if (imageFiles.length === 0) {
       return NextResponse.json(
         { error: 'At least one image is required' },
         { status: 400 }
       );
     }
 
-    // Get video files
-    const videoFiles = formData.getAll('videos') as File[];
-    const videoUrls: string[] = [];
-
-    if (videoFiles.length > 0) {
-      for (const file of videoFiles) {
-        if (file.size > 200 * 1024 * 1024) { // 200MB limit
-          return NextResponse.json(
-            { error: `វីដេអោ ${file.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
-            { status: 400 }
-          );
-        }
+    // Upload all images in parallel for better performance
+    const imageUrls = await Promise.all(
+      imageFiles.map(async (file) => {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const videoUrl = await saveVideo(buffer, file.name);
-        videoUrls.push(videoUrl);
-      }
+        return saveImage(buffer, file.name);
+      })
+    );
+
+    // Get video files - validate sizes first, then upload in parallel
+    const videoFiles = formData.getAll('videos') as File[];
+    const oversizedVideo = videoFiles.find(f => f.size > 200 * 1024 * 1024);
+    if (oversizedVideo) {
+      return NextResponse.json(
+        { error: `វីដេអោ ${oversizedVideo.name} ធំពេកពេក។ ទំហំអតិបរមា 200MB។` },
+        { status: 400 }
+      );
     }
+
+    const videoUrls = await Promise.all(
+      videoFiles.map(async (file) => {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        return saveVideo(buffer, file.name);
+      })
+    );
 
     const nextOrder = 0;
 
@@ -141,9 +141,9 @@ export async function POST(request: NextRequest) {
     // Add new car to cache (if cache exists) or let next GET fetch from DB
     const cacheAdded = await cacheAddCarToList(car);
     if (cacheAdded) {
-      console.warn(`[POST] Car ${car.id} added to Redis cache`);
+      console.log(`[POST] Car ${car.id} added to Redis cache`);
     } else {
-      console.warn(`[POST] Cache was empty, will be refreshed on next GET`);
+      console.log(`[POST] Cache was empty, will be refreshed on next GET`);
     }
 
     return NextResponse.json(car, { status: 201 });

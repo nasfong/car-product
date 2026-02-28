@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest) {
     );
 
     await Promise.all(updatePromises);
-    console.warn(`DB: Updated order for ${carIds.length} cars`);
+    console.log(`DB: Updated order for ${carIds.length} cars`);
 
     // Update car order in cache without clearing entire list
     await cacheUpdateCarOrder(carIds);

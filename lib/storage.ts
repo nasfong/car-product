@@ -2,38 +2,48 @@ import { uploadToMinio, deleteFromMinio, generateFileName } from './minio';
 import sharp from 'sharp';
 
 /**
- * Save image to MinIO object storage with WebP conversion
- * Standard resolution with high quality
+ * Extract the MinIO object key (path after bucket name) from a public URL.
+ * URL format: https://minio-api.nasfong.com/car-images/cars/123456-abc.webp
+ */
+function extractMinioKey(fileUrl: string): string {
+  const url = new URL(fileUrl);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const bucketName = process.env.MINIO_BUCKET_NAME || 'car-images';
+  const bucketIndex = pathParts.indexOf(bucketName);
+
+  if (bucketIndex === -1 || bucketIndex >= pathParts.length - 1) {
+    throw new Error(`Invalid MinIO URL format: ${fileUrl}`);
+  }
+
+  return pathParts.slice(bucketIndex + 1).join('/');
+}
+
+/**
+ * Save image to MinIO object storage with WebP conversion.
+ * Images are resized to max 1920px and converted to WebP for optimal web delivery.
  */
 export async function saveImage(
   file: Buffer,
   fileName: string
 ): Promise<string> {
   try {
-    // Convert image to WebP format - better performance without quality loss
     const webpBuffer = await sharp(file)
       .rotate() // Auto-rotate based on EXIF orientation
-      .resize(1920, 1920, { 
-        fit: 'inside', 
-        withoutEnlargement: true // Never upscale, only downscale if too large
-      }) // Max Full HD resolution (1920px) - standard for web
-      .webp({ 
-        quality: 90,      // High quality - excellent for web
-        effort: 3,        // Balanced compression effort
-        smartSubsample: true // Better color handling
+      .resize(1920, 1920, {
+        fit: 'inside',
+        withoutEnlargement: true, // Never upscale
+      })
+      .webp({
+        quality: 80,          // Good quality with better compression than 90
+        effort: 3,            // Balanced compression effort (0-6)
+        smartSubsample: true, // Better chroma subsampling
       })
       .toBuffer();
 
-    // Change extension to .webp
     const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
     const webpFileName = `${nameWithoutExt}.webp`;
-    
-    // Generate unique filename with cars/ prefix
     const uniqueFileName = generateFileName(webpFileName);
-    
-    // Upload to MinIO and return public URL
     const url = await uploadToMinio(webpBuffer, uniqueFileName, 'image/webp');
-    
     return url;
   } catch (error) {
     console.error('Error saving image:', error);
@@ -42,14 +52,13 @@ export async function saveImage(
 }
 
 /**
- * Save video to MinIO object storage
+ * Save video to MinIO object storage.
  */
 export async function saveVideo(
   file: Buffer,
   fileName: string
 ): Promise<string> {
   try {
-    // Determine content type from file extension
     const ext = fileName.split('.').pop()?.toLowerCase();
     const contentTypeMap: Record<string, string> = {
       'mp4': 'video/mp4',
@@ -58,14 +67,9 @@ export async function saveVideo(
       'webm': 'video/webm',
       'mkv': 'video/x-matroska',
     };
-    const contentType = contentTypeMap[ext || 'mp4'] || 'video/mp4';
-
-    // Generate unique filename with cars/ prefix
+    const contentType = contentTypeMap[ext ?? 'mp4'] ?? 'video/mp4';
     const uniqueFileName = generateFileName(fileName);
-    
-    // Upload to MinIO and return public URL
     const url = await uploadToMinio(file, uniqueFileName, contentType);
-    
     return url;
   } catch (error) {
     console.error('Error saving video:', error);
@@ -74,79 +78,31 @@ export async function saveVideo(
 }
 
 /**
- * Delete image from MinIO object storage
+ * Delete image from MinIO object storage.
  */
 export async function deleteImage(imageUrl: string): Promise<void> {
   try {
-    console.warn('Deleting image with URL:', imageUrl);
-    
-    // Extract filename from URL
-    // URL format: https://minio-api.nasfong.com/car-images/cars/123456-abc.jpg
-    const url = new URL(imageUrl);
-    const pathname = url.pathname;
-    
-    // Remove leading slash and bucket name from pathname
-    // pathname: /car-images/cars/123456-abc.jpg -> cars/123456-abc.jpg
-    const pathParts = pathname.split('/').filter(part => part !== '');
-    
-    // Find the bucket name and get everything after it
-    const bucketName = process.env.MINIO_BUCKET_NAME || 'car-images';
-    const bucketIndex = pathParts.indexOf(bucketName);
-    
-    if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
-      // Get everything after the bucket name
-      const fileName = pathParts.slice(bucketIndex + 1).join('/');
-      console.warn('Extracted filename for deletion:', fileName);
-      
-      if (fileName) {
-        await deleteFromMinio(fileName);
-        console.warn('Successfully deleted from MinIO:', fileName);
-      }
-    } else {
-      console.error('Could not extract filename from URL:', imageUrl);
-      throw new Error('Invalid image URL format');
-    }
-  } catch (_error) {
-    console.error('Error deleting image:', _error);
-    throw _error;
+    const key = extractMinioKey(imageUrl);
+    console.log('Deleting image from MinIO:', key);
+    await deleteFromMinio(key);
+    console.log('Successfully deleted image from MinIO:', key);
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error;
   }
 }
 
 /**
- * Delete video from MinIO object storage
+ * Delete video from MinIO object storage.
  */
 export async function deleteVideo(videoUrl: string): Promise<void> {
   try {
-    console.warn('Deleting video with URL:', videoUrl);
-    
-    // Extract filename from URL
-    // URL format: https://minio-api.nasfong.com/car-images/cars/123456-abc.mp4
-    const url = new URL(videoUrl);
-    const pathname = url.pathname;
-    
-    // Remove leading slash and bucket name from pathname
-    // pathname: /car-images/cars/123456-abc.mp4 -> cars/123456-abc.mp4
-    const pathParts = pathname.split('/').filter(part => part !== '');
-    
-    // Find the bucket name and get everything after it
-    const bucketName = process.env.MINIO_BUCKET_NAME || 'car-images';
-    const bucketIndex = pathParts.indexOf(bucketName);
-    
-    if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
-      // Get everything after the bucket name
-      const fileName = pathParts.slice(bucketIndex + 1).join('/');
-      console.warn('Extracted filename for deletion:', fileName);
-      
-      if (fileName) {
-        await deleteFromMinio(fileName);
-        console.warn('Successfully deleted from MinIO:', fileName);
-      }
-    } else {
-      console.error('Could not extract filename from URL:', videoUrl);
-      throw new Error('Invalid video URL format');
-    }
-  } catch (_error) {
-    console.error('Error deleting video:', _error);
-    throw _error;
+    const key = extractMinioKey(videoUrl);
+    console.log('Deleting video from MinIO:', key);
+    await deleteFromMinio(key);
+    console.log('Successfully deleted video from MinIO:', key);
+  } catch (error) {
+    console.error('Error deleting video:', error);
+    throw error;
   }
 }

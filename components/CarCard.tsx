@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Car } from "@/lib/types";
-import { memo, useState, useCallback, useRef } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -19,6 +19,18 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [maxImageIndex, setMaxImageIndex] = useState(0);
   const widthCacheRef = useRef<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Invalidate width cache when container is resized (e.g. viewport change)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      widthCacheRef.current = null;
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Scroll handler to update current image index - optimized to avoid forced reflow
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -30,6 +42,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
     }
     
     const itemWidth = widthCacheRef.current;
+    if (!itemWidth) return;
     const newIndex = Math.round(scrollLeft / itemWidth);
 
     // Only update if index changed
@@ -108,14 +121,14 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
 
           {/* Status Badge - Top Right Corner */}
           {car.status === 3 && (
-            <div className={`absolute top-3 z-10 ${showDragHandle ? '-right-6.25' : '-right-6.25'}`}>
+            <div className="absolute top-3 -right-6.25 z-10">
               <div className="bg-red-500 text-white text-sm sm:text-base px-12 sm:px-12 py-1.5 sm:py-2 font-bold transform rotate-30 shadow-xl">
                 លក់ចេញហើយ
               </div>
             </div>
           )}
           {car.status === 2 && (
-            <div className={`absolute top-3 z-10 ${showDragHandle ? '-right-6.25' : '-right-6.25'}`}>
+            <div className="absolute top-3 -right-6.25 z-10">
               <div className="bg-blue-700 text-white text-sm sm:text-base px-12 sm:px-12 py-1.5 sm:py-2 font-bold transform rotate-30 shadow-xl">
                 កំពុងរៀបចំ
               </div>
@@ -126,6 +139,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
           <div className="relative aspect-4/3 bg-gray-200">
             {/* Scrollable Image Container */}
             <div
+              ref={scrollContainerRef}
               className="w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide flex"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
               onScroll={handleScroll}
@@ -142,6 +156,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
                         alt={`${car.name} - Image ${index + 1}`}
                         className="object-cover pointer-events-none w-full h-full"
                         loading={index === 0 ? "eager" : "lazy"}
+                        decoding={index === 0 ? "sync" : "async"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         width={1024}
@@ -215,7 +230,7 @@ function CarCard({ car, isAuthenticated, onEdit, onDelete, isDragging = false, s
             </div>
 
             {/* Price */}
-            <div className={`${isAuthenticated ? 'mb-4' : 'mb-4'}`}>
+            <div className="mb-4">
               <span className="text-lg font-bold text-green-600">
                 {car.price}
               </span>

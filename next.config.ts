@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
   
   experimental: {
     serverActions: {
-      bodySizeLimit: '100gb'
+      // 300MB is sufficient for large video uploads; 100gb is excessive and wastes memory
+      bodySizeLimit: '300mb'
     },
-    proxyClientMaxBodySize: '100gb',
+    proxyClientMaxBodySize: '300mb',
   },
   
   serverExternalPackages: ['@prisma/client'],
@@ -38,9 +39,10 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60, // Changed from 1 year - too aggressive
-    // Only unoptimize in dev, optimize in production
-    unoptimized: process.env.NODE_ENV === 'development',
+    // Cache optimized images for 1 year (they are content-addressed, safe to cache long)
+    minimumCacheTTL: 31536000,
+    // Never skip optimization - unoptimized images cause high CPU on every request
+    unoptimized: false,
   },
   
   // Enable compression

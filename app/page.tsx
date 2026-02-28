@@ -20,13 +20,9 @@ async function checkAuthentication() {
   return token ? validTokens.includes(token) : false;
 }
 
-// Fetch cars on server side for SSR with timeout
+// Fetch cars on server side for SSR
 async function getCars() {
   try {
-    // Use a timeout to prevent slow queries from blocking page rendering
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(() => abortController.abort(), 3000); // 3 second timeout
-    
     const cars = await prisma.car.findMany({
       orderBy: [
         { displayOrder: 'asc' },
@@ -34,8 +30,6 @@ async function getCars() {
       ],
       take: 100, // Limit results to improve performance
     });
-    
-    clearTimeout(timeoutId);
     return cars;
   } catch (error) {
     console.error('Error fetching cars on server:', error);
